@@ -4,3 +4,22 @@ sessions.log
 telegram_login.py
 2026-04-26T07:39:30Z | ID=1 | EXIT=0
 ----------------------------------
+
+🔵 EXECUTING ID=1 : ex ls -al
+
+🖥️ Command (ex): ls -al
+--------------------------------
+total 44
+drwxr-xr-x 5 runner runner 4096 Apr 26 08:02 .
+drwxr-xr-x 3 runner runner 4096 Apr 26 07:57 ..
+drwxr-xr-x 7 runner runner 4096 Apr 26 08:02 .git
+drwxr-xr-x 3 runner runner 4096 Apr 26 07:57 .github
+-rw-r--r-- 1 runner runner   67 Apr 26 07:57 .gitignore
+-rw-r--r-- 1 runner runner   11 Apr 26 08:02 .last_reset
+-rw-r--r-- 1 runner runner    2 Apr 26 08:02 .rshell_state
+-rw-r--r-- 1 runner runner   10 Apr 26 07:58 commands.txt
+drwxr-xr-x 2 runner runner 4096 Apr 26 07:57 session
+-rw-r--r-- 1 runner runner  220 Apr 26 08:02 sessions.log
+-rw-r--r-- 1 runner runner  267 Apr 26 07:57 telegram_login.py
+--------------------------------
+2026-04-26T08:02:00Z | ID=1 | EXIT=0
