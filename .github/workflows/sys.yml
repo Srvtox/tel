@@ -17,7 +17,8 @@ jobs:
     timeout-minutes: 355
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repo
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -31,37 +32,21 @@ jobs:
           mkdir -p session
           touch commands.txt sessions.log .rshell_state session/env
           if [ ! -s .rshell_state ]; then echo 0 > .rshell_state; fi
+          if [ ! -s session/env ]; then echo "# Session environment vars" > session/env; fi
 
       - name: Load session environment
-        id: loadenv
         run: |
-          if [ -f session/env ]; then
-            echo "Loading session environment..."
-            set -a
-            source session/env
-            set +a
-          fi
+          echo "Loading saved session environment..."
+          set -a
+          source session/env 2>/dev/null || true
+          set +a
 
       - name: Start Remote Shell Engine (loop)
         shell: bash
         run: |
           echo "🚀 Remote Shell 4.0 Ultimate Pro Max Started"
           START_TIME=$(date +%s)
-
-          # Helper: update session env file with new exports found
-          function update_session_env() {
-            local line="$1"
-            # if line is export VAR=val
-            if [[ "$line" =~ ^export[[:space:]]+([A-Za-z_][A-Za-z0-9_]*)=(.*)$ ]]; then
-              VAR="${BASH_REMATCH[1]}"
-              VAL="${BASH_REMATCH[2]}"
-              # Remove old var from env file
-              grep -v "^export $VAR=" session/env > session/env.tmp || true
-              echo "export $VAR=$VAL" >> session/env.tmp
-              mv session/env.tmp session/env
-              echo "Updated session env variable: $VAR=$VAL"
-            fi
-          }
+          set -e
 
           while true; do
             git fetch origin
@@ -70,26 +55,33 @@ jobs:
             LAST_ID=$(cat .rshell_state)
             COUNT=0
 
-            # Read commands.txt line by line with line number (= ID)
             while IFS= read -r line; do
               COUNT=$((COUNT+1))
               ID=$COUNT
 
-              # if this ID is not executed yet
+              if [[ -z "$line" || "$line" =~ ^# ]]; then
+                continue
+              fi
+
               if [ "$ID" -gt "$LAST_ID" ]; then
-
                 echo "⚡ Executing ID=$ID → $line"
-
                 TS=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
-                # Handle export lines for session memory
-                if [[ "$line" =~ ^export[[:space:]]+ ]]; then
-                  # Update session env file and source into shell environment
-                  update_session_env "$line"
+                # -------------------------
+                #     HANDLE EXPORT
+                # -------------------------
+                if echo "$line" | grep -q '^export[[:space:]]'; then
+                  VAR=$(echo "$line" | sed -E 's/export[[:space:]]+([A-Za-z_][A-Za-z0-9_]*)=.*/\1/')
+                  grep -v "^export $VAR=" session/env > session/env.tmp || true
+                  echo "$line" >> session/env.tmp
+                  mv session/env.tmp session/env
+
                   source session/env
+
                   echo "$TS | ID=$ID | export updated" >> sessions.log
                   echo "$line" >> sessions.log
                   echo "----------------------------------" >> sessions.log
+
                   echo "$ID" > .rshell_state
                   git add sessions.log .rshell_state session/env
                   git commit -m "session update $ID [skip ci]" || true
@@ -97,12 +89,14 @@ jobs:
                   continue
                 fi
 
+                # -------------------------
+                #     EXECUTE NORMAL CMD
+                # -------------------------
                 set +e
-                # Run the command with session environment loaded
-                # Check if parallel: if command ends with '&' run background
-                if [[ "$line" =~ &\s*$ ]]; then
+                if echo "$line" | grep -q '&[[:space:]]*$'; then
                   bash -c "source session/env && $line" >> sessions.log 2>&1 &
                   EXIT=0
+                  echo "⚙️ Parallel execution started for ID=$ID"
                 else
                   bash -c "source session/env && $line" >> sessions.log 2>&1
                   EXIT=$?
@@ -113,21 +107,21 @@ jobs:
                 echo "----------------------------------" >> sessions.log
 
                 echo "$ID" > .rshell_state
-
                 git add sessions.log .rshell_state session/env
                 git commit -m "exec $ID [skip ci]" || true
                 git push || true
-
               fi
             done < commands.txt
 
-            # Auto restart after 5h50m (21000s)
+            # -------------------------
+            #     AUTO RESTART SYSTEM
+            # -------------------------
             NOW=$(date +%s)
             ELAPSED=$((NOW - START_TIME))
 
             if [ "$ELAPSED" -gt 21000 ]; then
               echo "♻️ Auto Restarting Remote Shell 4.0 Ultimate Pro Max..."
-              gh workflow run remote-shell-4.0.yml
+              gh workflow run remote-shell.yml
               exit 0
             fi
 
