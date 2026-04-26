@@ -1,1 +1,1 @@
-ex echo "hello"
+ex ls -al
