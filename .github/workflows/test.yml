@@ -1,0 +1,48 @@
+name: Proxy Test Server
+
+on:
+  workflow_dispatch:
+
+jobs:
+  proxy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+
+    steps:
+
+    - name: Update system
+      run: |
+        sudo apt update
+
+    - name: Install TinyProxy
+      run: |
+        sudo apt install -y tinyproxy
+
+    - name: Configure TinyProxy
+      run: |
+        sudo sed -i 's/Allow 127.0.0.1/#Allow 127.0.0.1/g' /etc/tinyproxy/tinyproxy.conf
+        echo "Allow 0.0.0.0/0" | sudo tee -a /etc/tinyproxy/tinyproxy.conf
+        sudo sed -i 's/Port 8888/Port 8888/g' /etc/tinyproxy/tinyproxy.conf
+
+    - name: Restart TinyProxy
+      run: |
+        sudo service tinyproxy restart
+        sudo service tinyproxy status
+
+    - name: Show public IP
+      run: |
+        echo "Public IP:"
+        curl ifconfig.me || true
+        echo ""
+        echo "Proxy port: 8888"
+
+    - name: Test proxy locally
+      run: |
+        curl -x http://127.0.0.1:8888 http://example.com
+
+    - name: Keep server alive
+      run: |
+        echo "Server running..."
+        for i in {1..21600}; do
+          sleep 1
+        done
