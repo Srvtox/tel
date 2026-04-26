@@ -1,0 +1,30 @@
+name: GitHub Proxy
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup Proxy
+        run: |
+          sudo apt update
+          sudo apt install -y ssh
+          # تولید کلید موقت برای SSH
+          ssh-keygen -t ed25519 -N "" -f /home/runner/.ssh/id_ed25519
+          echo "✅ SSH key generated!"
+          # چاپ public key برای اتصال از سیستم خودت
+          echo "👇 Copy this public key to your local authorized_keys file later:"
+          cat /home/runner/.ssh/id_ed25519.pub
+          # شروع SSH server
+          sudo mkdir -p /run/sshd
+          sudo /usr/sbin/sshd -D &
+          sleep 3
+          echo "✅ SSH Server is running on port 22"
+          # نمایش IP سرور GitHub Actions runner
+          echo "🌍 Your Proxy IP:"
+          hostname -I
+          echo "🎯 Connect using this command:"
+          echo "ssh -D 1080 -N -o StrictHostKeyChecking=no runner@<IP>"
