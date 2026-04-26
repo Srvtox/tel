@@ -1,0 +1,19 @@
+name: Telegram Access
+
+on:
+  workflow_dispatch:
+
+jobs:
+  telegram:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install python
+        run: |
+          pip install telethon
+
+      - name: Run script
+        run: |
+          python telegram_login.py
