@@ -420,3 +420,28 @@ FAIL: 38: can not find command 'telegram-cli'
 phone number:
 --------------------------------
 2026-04-26T09:33:34Z | ID=4 | EXIT=0
+📥 Injecting input: help
+under certain conditions; type `show_license' for details.
+Telegram-cli uses libtgl version 2.1.0
+Telegram-cli includes software developed by the OpenSSL Project
+for use in the OpenSSL Toolkit. (http://www.openssl.org/)
+I: config dir=[/home/runner/.config/telegram-cli]
+[/home/runner/.config/telegram-cli] created
+[/home/runner/.telegram-cli] created
+[/home/runner/.telegram-cli/downloads] created
+phone number: +989960437404
+ *** 1777195785.598192 Notification API_64BIT_LOGIN_APP_OUTDATED_285: You are us
+ing an outdated app that is no longer supported. To access your messages, please
+ update your app to the latest version. If you don’t know how to update your app
+, go to https://telegram.org/dl
+ *** 1777195785.599475 Incorrect phone number
+phone number: help
+ *** 1777195889.661216 Incorrect phone number
+phone number: cd /home/runner/work/tel/tel
+> source session/env 2>/dev/null
+FAIL: 38: can not find command 'source'
+> telegram-cli -k tg-server.pub
+FAIL: 38: can not find command 'telegram-cli'
+ *** 1777196014.566779 Incorrect phone number
+phone number: help
+>
