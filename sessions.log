@@ -1,1 +1,59 @@
 
+
+🔵 EXEC ID=1 : ex apt install nmap
+🖥 Command: apt install nmap
+--------------------------------
+
+WARNING: apt does not have a stable CLI interface. Use with caution in scripts.
+
+Reading package lists...
+Building dependency tree...
+Reading state information...
+The following additional packages will be installed:
+  libblas3 liblinear4 nmap-common
+Suggested packages:
+  liblinear-tools liblinear-dev ncat ndiff zenmap
+The following NEW packages will be installed:
+  libblas3 liblinear4 nmap nmap-common
+0 upgraded, 4 newly installed, 0 to remove and 7 not upgraded.
+Need to get 6166 kB of archives.
+After this operation, 27.0 MB of additional disk space will be used.
+Get:1 file:/etc/apt/apt-mirrors.txt Mirrorlist [144 B]
+Get:2 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libblas3 amd64 3.12.0-3build1.1 [238 kB]
+Get:3 http://azure.archive.ubuntu.com/ubuntu noble/universe amd64 liblinear4 amd64 2.3.0+dfsg-5build1 [42.3 kB]
+Get:4 http://azure.archive.ubuntu.com/ubuntu noble/universe amd64 nmap-common all 7.94+git20230807.3be01efb1+dfsg-3build2 [4192 kB]
+Get:5 http://azure.archive.ubuntu.com/ubuntu noble/universe amd64 nmap amd64 7.94+git20230807.3be01efb1+dfsg-3build2 [1694 kB]
+Fetched 6166 kB in 0s (17.1 MB/s)
+Selecting previously unselected package libblas3:amd64.
+(Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 220764 files and directories currently installed.)
+Preparing to unpack .../libblas3_3.12.0-3build1.1_amd64.deb ...
+Unpacking libblas3:amd64 (3.12.0-3build1.1) ...
+Selecting previously unselected package liblinear4:amd64.
+Preparing to unpack .../liblinear4_2.3.0+dfsg-5build1_amd64.deb ...
+Unpacking liblinear4:amd64 (2.3.0+dfsg-5build1) ...
+Selecting previously unselected package nmap-common.
+Preparing to unpack .../nmap-common_7.94+git20230807.3be01efb1+dfsg-3build2_all.deb ...
+Unpacking nmap-common (7.94+git20230807.3be01efb1+dfsg-3build2) ...
+Selecting previously unselected package nmap.
+Preparing to unpack .../nmap_7.94+git20230807.3be01efb1+dfsg-3build2_amd64.deb ...
+Unpacking nmap (7.94+git20230807.3be01efb1+dfsg-3build2) ...
+Setting up libblas3:amd64 (3.12.0-3build1.1) ...
+update-alternatives: using /usr/lib/x86_64-linux-gnu/blas/libblas.so.3 to provide /usr/lib/x86_64-linux-gnu/libblas.so.3 (libblas.so.3-x86_64-linux-gnu) in auto mode
+Setting up nmap-common (7.94+git20230807.3be01efb1+dfsg-3build2) ...
+Setting up liblinear4:amd64 (2.3.0+dfsg-5build1) ...
+Setting up nmap (7.94+git20230807.3be01efb1+dfsg-3build2) ...
+Processing triggers for man-db (2.12.0-4build2) ...
+Not building database; man-db/auto-update is not 'true'.
+Processing triggers for libc-bin (2.39-0ubuntu8.7) ...
+
+Running kernel seems to be up-to-date.
+
+No services need to be restarted.
+
+No containers need to be restarted.
+
+No user sessions are running outdated binaries.
+
+No VM guests are running outdated hypervisor (qemu) binaries on this host.
+--------------------------------
+2026-04-26T08:25:29Z | ID=1 | EXIT=0
