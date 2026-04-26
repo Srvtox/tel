@@ -2,3 +2,4 @@ ex exit
 ex apt install telegram-cli
 ex telegram-cli -k tg-server.pub
 ex telegram-cli -k tg-server.pub
+ex ls
