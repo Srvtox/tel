@@ -1,158 +1,146 @@
-name: Remote Shell 4.0 Ultimate Pro Max LogStream Edition
+name: Remote Shell 9.0 FINAL BOSS EDITION
 
 on:
   workflow_dispatch:
-
-concurrency:
-  group: remote-shell-ultimate
-  cancel-in-progress: true
 
 permissions:
   contents: write
   actions: write
 
+concurrency:
+  group: remote-shell
+  cancel-in-progress: true
+
 jobs:
-  ultimate-shell:
+  shell:
     runs-on: ubuntu-latest
     timeout-minutes: 355
 
     steps:
 
-      - name: Checkout repo
+      - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Setup Git
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "remote-shell"
+          git config user.email "remote-shell@users.noreply.github.com"
           git config pull.rebase false
 
-      - name: Prepare environment and files
+      - name: Init State
         run: |
           mkdir -p session
-          touch commands.txt sessions.log .rshell_state session/env
+          touch commands.txt sessions.log .rshell_state session/env .last_reset
 
-          if [ ! -s .rshell_state ]; then echo 0 > .rshell_state; fi
-          if [ ! -s session/env ]; then echo "# Session environment vars" > session/env; fi
+          # مقدارهای پیش‌فرض
+          [ ! -s .rshell_state ] && echo 0 > .rshell_state
+          [ ! -s session/env ] && echo "# Session Env Vars" > session/env
+          [ ! -s .last_reset ] && date +%s > .last_reset
 
-      - name: Load session environment
+      - name: Load Session Environment
         run: |
-          echo "Loading saved session environment..."
+          echo "Loading session env..."
           set -a
-          source session/env 2>/dev/null || true
+          source session/env || true
           set +a
 
-      - name: Start Remote Shell Engine (loop)
+      - name: Start Remote Shell Engine
         shell: bash
         run: |
-          echo "🚀 Remote Shell 4.0 Ultimate Pro Max LogStream Edition Started"
+          echo "🚀 Remote Shell 9.0 FINAL BOSS EDITION Started"
 
           set -e
 
           while true; do
-            # فقط اگر remote branch فرق داشت، بازیابی کن
-            git fetch origin || echo "⚠️ git fetch failed"
 
-            LOCAL_HASH=$(git rev-parse HEAD)
-            REMOTE_HASH=$(git rev-parse origin/main)
+            git fetch origin || echo "⚠️ fetch failed"
 
-            if [ "$LOCAL_HASH" != "$REMOTE_HASH" ]; then
+            LOCAL=$(git rev-parse HEAD)
+            REMOTE=$(git rev-parse origin/main)
+            NOW=$(date +%s)
+            LAST_RESET=$(cat .last_reset)
+
+            # Reset فقط اگر تغییر واقعی در ریموت باشد و از آخرین reset حداقل 5 ثانیه گذشته باشد
+            if [ "$LOCAL" != "$REMOTE" ] && [ $((NOW - LAST_RESET)) -gt 5 ]; then
+              echo "DEBUG: Safe Reset"
+              echo "$NOW" > .last_reset
               git reset --hard origin/main
-              echo "DEBUG: Reset to $REMOTE_HASH" >&2
             else
-              echo "DEBUG: Repo is up-to-date" >&2
+              echo "DEBUG: No reset needed"
             fi
 
             LAST_ID=$(cat .rshell_state)
             COUNT=0
-            CMD_FOUND=0
+            NEWFOUND=0
 
             while IFS= read -r line; do
               COUNT=$((COUNT+1))
               ID=$COUNT
 
-              # لاگ debug برای بررسی
-              echo "DEBUG: ID=$ID, LAST_ID=$LAST_ID, line='$line'" >&2
+              # خط خالی یا کامنت بپر
+              [[ -z "$line" || "$line" =~ ^# ]] && continue
 
-              # اسکپ کردن خط خالی و کامنت
-              if [[ -z "$line" || "$line" =~ ^# ]]; then
-                continue
-              fi
-
-              # فقط دستورات بالاتر از LaST_ID اجرا کن
+              # اگر قبلا اجرا شده رد کن
               if [ "$ID" -le "$LAST_ID" ]; then
-                echo "Skipping already executed ID=$ID" >&2
                 continue
               fi
 
-              CMD_FOUND=1
+              # دستور جدید
+              NEWFOUND=1
               TS=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-              echo -e "\n🚀 Executing ID=$ID → $line" | tee -a sessions.log
 
-              # اگر export باشه
-              if echo "$line" | grep -q '^export[[:space:]]'; then
+              echo -e "\n🔵 EXECUTING ID=$ID : $line" | tee -a sessions.log
+
+              # دستور export
+              if [[ "$line" =~ ^export[[:space:]] ]]; then
                 VAR=$(echo "$line" | sed -E 's/export[[:space:]]+([A-Za-z_][A-Za-z0-9_]*)=.*/\1/')
+                grep -v "^export $VAR=" session/env > env.tmp || true
+                echo "$line" >> env.tmp
+                mv env.tmp session/env
 
-                grep -v "^export $VAR=" session/env > session/env.tmp || true
-                echo "$line" >> session/env.tmp
-                mv session/env.tmp session/env
-
-                source session/env || echo "⚠️ failed to source env"
+                source session/env || true
 
                 echo "$TS | ID=$ID | export updated" | tee -a sessions.log
-
                 echo "$ID" > .rshell_state
-
-                git add -f sessions.log .rshell_state session/env
-                git commit -m "session update $ID [skip ci]" || true
+                git add -f session/env .rshell_state sessions.log
+                git commit -m "export update $ID [skip ci]" || true
                 git push || true
-
                 continue
               fi
 
-              # حذف حالت 'set -e' برای اجرای دستورات به شکل امن
+              # اجرای دستورات ex
               set +e
-
-              # --- اجرای دستورات با پیشوند ex ---
               if [[ "$line" =~ ^ex[[:space:]] ]]; then
-                # گرفتن دستور بدون پیشوند ex
                 cmd="${line#ex }"
 
-                echo -e "\n🖥️ Command (ex): $cmd\n----------------------------------" | tee -a sessions.log
+                echo -e "\n🖥️ Command (ex): $cmd\n--------------------------------" | tee -a sessions.log
                 bash -c "source session/env && $cmd" 2>&1 | tee -a sessions.log
                 EXIT=${PIPESTATUS[0]}
-                echo -e "----------------------------------\n" | tee -a sessions.log
+                echo "--------------------------------" | tee -a sessions.log
 
               else
-                # --- اجرای دستورات عادی ---
-
+                # اجرای عادی
                 bash -c "source session/env && $line" 2>&1 | tee -a sessions.log
                 EXIT=${PIPESTATUS[0]}
               fi
-
               set -e
 
               echo "$TS | ID=$ID | EXIT=$EXIT" | tee -a sessions.log
-              echo "----------------------------------" | tee -a sessions.log
-
               echo "$ID" > .rshell_state
 
+              # Push نتیجه
               git add -f sessions.log .rshell_state session/env
               git commit -m "exec $ID [skip ci]" || true
               git push || true
+
             done < commands.txt
 
-            # اگر دستور جدید وجود ندارد، بیشتر صبر کن
-            if [ "$CMD_FOUND" -eq 0 ]; then
-              echo "No new commands found. Sleeping 10 seconds..." >&2
+            if [ "$NEWFOUND" -eq 0 ]; then
+              echo "⏳ No new commands. Sleeping 10s..."
               sleep 10
             else
               sleep 2
             fi
-
           done
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
