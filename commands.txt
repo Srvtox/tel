@@ -1,6 +1,1 @@
-ex apt install nmap
-ex ls
-ex nmap
-ex apt install telegram-cli
-ex telegram-cli -k tg-server.pub
-ex +9809170489497
+
