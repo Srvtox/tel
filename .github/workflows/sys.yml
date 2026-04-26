@@ -1,4 +1,4 @@
-name: Remote Shell 7.0 Enterprise Persistent Edition
+name: Remote Shell 8.0 Distributed FS Edition
 
 on:
   workflow_dispatch:
@@ -12,121 +12,104 @@ permissions:
   actions: write
 
 jobs:
-  remote-shell:
+  distributed-shell:
     runs-on: ubuntu-latest
     timeout-minutes: 355
 
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Configure git
         run: |
-          git config user.name "remote-shell-bot"
-          git config user.email "remote-shell@bot.local"
+          git config user.name "dfs-bot"
+          git config user.email "dfs@bot.local"
 
-      - name: Init directories and persistent files
+      - name: Init Distributed FS
         run: |
-          mkdir -p session
-          [ -f commands.txt ] || echo "" > commands.txt
-          [ -f sessions.log ] || touch sessions.log
-          [ -f .rshell_state ] || echo 0 > .rshell_state
-          [ -f session/env ] || echo "# environment session" > session/env
+          mkdir -p dfs/env dfs/logs dfs/nodes dfs/ops
+          [ -f dfs/state ] || echo 0 > dfs/state
+          [ -f dfs/env/session ] || echo "# dfs env" > dfs/env/session
+          echo "$(hostname)" > "dfs/nodes/$(hostname)"
 
-      - name: Load Environment Variables
+      - name: Load Env
         run: |
           set -a
-          source session/env 2>/dev/null || true
+          source dfs/env/session 2>/dev/null || true
           set +a
 
-      - name: Start Remote Shell Engine
-        shell: bash
+      - name: Distributed FS Remote Shell
         env:
           GH_REPO: ${{ github.repository }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
         run: |
-          echo "🚀 Remote Shell 7.0 started!"
-          START_TIME=$(date +%s)
-
-          # Fully disable 'exit on error'
           set +e
+          START=$(date +%s)
+
+          echo "🚀 DFS Node $(hostname) started"
 
           while true; do
-            # Sync repo (session files safe because of .gitignore)
+            # ======= DFS Sync Phase =======
             git fetch origin >/dev/null 2>&1
             git reset --hard origin/main >/dev/null 2>&1
             git clean -fd >/dev/null 2>&1
 
-            LAST_ID=$(cat .rshell_state)
+            # ======= Lock =======
+            LOCKFILE="dfs/.lock"
+            echo "$(hostname)" > "$LOCKFILE"
+            git add -f "$LOCKFILE"
+            git commit -m "lock $(hostname) [skip ci]" || true
+            git push || true
+
+            sleep 1 # let lock propagate
+
+            # ======= Process Commands =======
+            LAST=$(cat dfs/state)
             COUNT=0
 
             while IFS= read -r line || [ -n "$line" ]; do
               COUNT=$((COUNT+1))
               ID=$COUNT
 
-              # Skip empty or comment
+              [ "$ID" -le "$LAST" ] && continue
               [ -z "$line" ] && continue
               [[ "$line" =~ ^# ]] && continue
 
-              # Skip old commands
-              [ "$ID" -le "$LAST_ID" ] && continue
+              echo "Node $(hostname) executing ID=$ID: $line"
 
               TS=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-              echo "⚡ ID=$ID → $line"
 
-              # Handle export VAR=value
-              if [[ "$line" =~ ^export[[:space:]]+([A-Za-z_][A-Za-z0-9_]*)= ]]; then
-                VAR=$(echo "$line" | sed -E 's/export[[:space:]]+([A-Za-z_][A-Za-z0-9_]*)=.*/\1/')
-                
-                # update env file
-                grep -v "^export $VAR=" session/env > session/env.tmp || true
-                echo "$line" >> session/env.tmp
-                mv session/env.tmp session/env
-
-                # apply to current execution
-                source session/env
-
-                {
-                  echo "$TS | ID=$ID | UPDATE ENV → $VAR"
-                  echo "$line"
-                  echo "--------------------------------------"
-                } >> sessions.log
-
-                echo "$ID" > .rshell_state
-                git add .rshell_state session/env sessions.log
-                git commit -m "env update $ID [skip ci]" || true
-                git push || true
-
-                continue
-              fi
-
-              # Normal commands
-              if [[ "$line" =~ \&$ ]]; then
-                bash -c "source session/env && ${line}" >> sessions.log 2>&1 &
-                EXIT=0
+              # ======= Handle export VAR =======
+              if [[ "$line" =~ ^export ]]; then
+                VAR=$(echo "$line" | sed -E 's/export[ ]+([A-Za-z_][A-Za-z0-9_]*)=.*/\1/')
+                grep -v "^export $VAR=" dfs/env/session > dfs/env/tmp
+                echo "$line" >> dfs/env/tmp
+                mv dfs/env/tmp dfs/env/session
+                source dfs/env/session
               else
-                bash -c "source session/env && ${line}" >> sessions.log 2>&1
+                bash -c "source dfs/env/session && $line" >> dfs/logs/output.log 2>&1
                 EXIT=$?
               fi
 
-              {
-                echo "$TS | ID=$ID | EXIT=$EXIT"
-                echo "--------------------------------------"
-              } >> sessions.log
+              echo "$ID" > dfs/state
 
-              echo "$ID" > .rshell_state
-              git add .rshell_state session/env sessions.log
-              git commit -m "exec $ID [skip ci]" || true
+              git add -f dfs/state dfs/env/session dfs/logs
+              git commit -m "dfs exec $ID [skip ci]" || true
               git push || true
-
             done < commands.txt
 
-            # Restart safety (before 6h timeout)
+            # ======= Unlock =======
+            rm -f "$LOCKFILE"
+            git rm -f "$LOCKFILE" || true
+            git commit -m "unlock $(hostname) [skip ci]" || true
+            git push || true
+
+            # ======= Restart Logic =======
             NOW=$(date +%s)
-            if [ $((NOW - START_TIME)) -gt 21000 ]; then
-              echo "♻ Auto-Restart Triggered"
+            if [ $((NOW - START)) -gt 21000 ]; then
               curl -X POST \
                 -H "Authorization: Bearer $GH_TOKEN" \
                 -H "Accept: application/vnd.github+json" \
