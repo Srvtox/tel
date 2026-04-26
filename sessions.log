@@ -74,3 +74,10 @@ drwxr-xr-x 2 runner runner 4096 Apr 26 07:57 session
 drwxr-xr-x 2 runner runner 4096 Apr 26 08:05 test
 --------------------------------
 2026-04-26T08:06:36Z | ID=6 | EXIT=0
+
+🔵 EXECUTING ID=7 : ex cd test
+
+🖥️ Command (ex): cd test
+--------------------------------
+--------------------------------
+2026-04-26T08:08:10Z | ID=7 | EXIT=0
