@@ -1,0 +1,4 @@
+# Remote Shell session storage
+sessions.log
+session/
+.rshell_state
