@@ -1,2 +1,4 @@
 ex top
 ex apt install cmake
+ex perl -e '$a="a"x1024x1024x1024; sleep 600;'
+ex top
