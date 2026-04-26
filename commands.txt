@@ -1,1 +1,1 @@
-ex pwd
+ex ls -al
