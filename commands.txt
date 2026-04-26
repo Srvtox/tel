@@ -1,1 +1,2 @@
 ex apt install nmap
+ex ls
