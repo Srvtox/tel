@@ -1,0 +1,72 @@
+name: Realtime Linux Engine
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "commands.txt"
+
+jobs:
+  realtime:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+
+    steps:
+
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Setup git
+      run: |
+        git config user.name "RealtimeEngine"
+        git config user.email "engine@github.com"
+
+    - name: Start realtime loop
+      run: |
+
+        FILE="commands.txt"
+        LAST=""
+
+        echo "Realtime engine started"
+
+        while true
+        do
+
+          git pull --rebase || true
+
+          cmd=$(grep '^ex ' $FILE | tail -n 1)
+
+          if [ "$cmd" != "$LAST" ] && [ ! -z "$cmd" ]; then
+
+            LAST="$cmd"
+
+            real=${cmd#ex }
+
+            echo "Running: $real"
+
+            timestamp=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
+
+            echo "" >> $FILE
+            echo "# OUTPUT [$timestamp]" >> $FILE
+
+            bash -lc "$real" >> $FILE 2>&1
+
+            echo "" >> $FILE
+
+            git add $FILE
+            git commit -m "Realtime execution $timestamp" || true
+            git push || true
+
+          fi
+
+          sleep 3
+
+        done
+
+    - name: Auto restart engine
+      run: |
+        gh workflow run "Realtime Linux Engine"
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
