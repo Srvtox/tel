@@ -1,155 +1,138 @@
-name: Remote Shell Pro 2.0
+name: Remote Shell 4.0 Ultimate Pro Max
 
 on:
   workflow_dispatch:
 
-  push:
-    branches:
-      - main
-    paths:
-      - 'commands.txt'
-
 concurrency:
-  group: remote-shell
+  group: remote-shell-ultimate
   cancel-in-progress: true
 
 permissions:
   contents: write
+  actions: write
 
 jobs:
-  remote-shell:
+  ultimate-shell:
     runs-on: ubuntu-latest
+    timeout-minutes: 355
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Configure git user
+      - name: Setup Git
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Safe sync with origin/main
+      - name: Prepare environment and files
         run: |
-          set -e
-          git fetch origin
-          git reset --hard origin/main
+          mkdir -p session
+          touch commands.txt sessions.log .rshell_state session/env
+          if [ ! -s .rshell_state ]; then echo 0 > .rshell_state; fi
 
-      - name: Ensure required files exist
+      - name: Load session environment
+        id: loadenv
         run: |
-          set -e
-          # حذف فایل خراب با نام "commands.txt\n" اگر وجود داشت
-          if [ -f "commands.txt\n" ]; then
-            rm -f "commands.txt\n"
+          if [ -f session/env ]; then
+            echo "Loading session environment..."
+            set -a
+            source session/env
+            set +a
           fi
 
-          # اگر فایل‌ها وجود ندارند، بساز
-          [ -f commands.txt ] || touch commands.txt
-          [ -f sessions.log ] || touch sessions.log
-          [ -f .rshell_state ] || touch .rshell_state
+      - name: Start Remote Shell Engine (loop)
+        shell: bash
+        run: |
+          echo "🚀 Remote Shell 4.0 Ultimate Pro Max Started"
+          START_TIME=$(date +%s)
 
-      - name: Run Remote Shell Engine
+          # Helper: update session env file with new exports found
+          function update_session_env() {
+            local line="$1"
+            # if line is export VAR=val
+            if [[ "$line" =~ ^export[[:space:]]+([A-Za-z_][A-Za-z0-9_]*)=(.*)$ ]]; then
+              VAR="${BASH_REMATCH[1]}"
+              VAL="${BASH_REMATCH[2]}"
+              # Remove old var from env file
+              grep -v "^export $VAR=" session/env > session/env.tmp || true
+              echo "export $VAR=$VAL" >> session/env.tmp
+              mv session/env.tmp session/env
+              echo "Updated session env variable: $VAR=$VAL"
+            fi
+          }
+
+          while true; do
+            git fetch origin
+            git reset --hard origin/main
+
+            LAST_ID=$(cat .rshell_state)
+            COUNT=0
+
+            # Read commands.txt line by line with line number (= ID)
+            while IFS= read -r line; do
+              COUNT=$((COUNT+1))
+              ID=$COUNT
+
+              # if this ID is not executed yet
+              if [ "$ID" -gt "$LAST_ID" ]; then
+
+                echo "⚡ Executing ID=$ID → $line"
+
+                TS=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+                # Handle export lines for session memory
+                if [[ "$line" =~ ^export[[:space:]]+ ]]; then
+                  # Update session env file and source into shell environment
+                  update_session_env "$line"
+                  source session/env
+                  echo "$TS | ID=$ID | export updated" >> sessions.log
+                  echo "$line" >> sessions.log
+                  echo "----------------------------------" >> sessions.log
+                  echo "$ID" > .rshell_state
+                  git add sessions.log .rshell_state session/env
+                  git commit -m "session update $ID [skip ci]" || true
+                  git push || true
+                  continue
+                fi
+
+                set +e
+                # Run the command with session environment loaded
+                # Check if parallel: if command ends with '&' run background
+                if [[ "$line" =~ &\s*$ ]]; then
+                  bash -c "source session/env && $line" >> sessions.log 2>&1 &
+                  EXIT=0
+                else
+                  bash -c "source session/env && $line" >> sessions.log 2>&1
+                  EXIT=$?
+                fi
+                set -e
+
+                echo "$TS | ID=$ID | EXIT=$EXIT" >> sessions.log
+                echo "----------------------------------" >> sessions.log
+
+                echo "$ID" > .rshell_state
+
+                git add sessions.log .rshell_state session/env
+                git commit -m "exec $ID [skip ci]" || true
+                git push || true
+
+              fi
+            done < commands.txt
+
+            # Auto restart after 5h50m (21000s)
+            NOW=$(date +%s)
+            ELAPSED=$((NOW - START_TIME))
+
+            if [ "$ELAPSED" -gt 21000 ]; then
+              echo "♻️ Auto Restarting Remote Shell 4.0 Ultimate Pro Max..."
+              gh workflow run remote-shell-4.0.yml
+              exit 0
+            fi
+
+            sleep 2
+          done
         env:
-          STATE_FILE: .rshell_state
-          LOG_FILE: sessions.log
-          CMD_FILE: commands.txt
-        run: |
-          set -e
-
-          echo "=== Remote Shell Pro 2.0 starting ==="
-
-          # اگر state خالی بود، از 0 شروع کن
-          if [ ! -s "$STATE_FILE" ]; then
-            echo "0" > "$STATE_FILE"
-          fi
-
-          LAST_ID_PROCESSED=$(cat "$STATE_FILE" | tr -d '\r\n' || echo "0")
-          echo "Last processed command id: $LAST_ID_PROCESSED"
-
-          # فرمت مورد انتظار:
-          # ex 1 ls -la
-          # ex 2 uname -a
-          # ex 3 echo "hello"
-          #
-          # آخرین ex را بگیر
-          LAST_LINE=$(grep '^ex ' "$CMD_FILE" | tail -n 1 || true)
-
-          if [ -z "$LAST_LINE" ]; then
-            echo "No ex command found in $CMD_FILE. Exiting..."
-            exit 0
-          fi
-
-          echo "Last ex line: $LAST_LINE"
-
-          # جدا کردن ID و خود command
-          # ex 12 ls -la
-          CMD_ID=$(echo "$LAST_LINE" | awk '{print $2}')
-          CMD_RAW=$(echo "$LAST_LINE" | cut -d' ' -f3-)
-
-          if [ -z "$CMD_ID" ] || [ -z "$CMD_RAW" ]; then
-            echo "Failed to parse command line: $LAST_LINE"
-            exit 1
-          fi
-
-          echo "Parsed Command ID: $CMD_ID"
-          echo "Parsed Command: $CMD_RAW"
-
-          # اگر این ID جدید نیست، بی‌خیال
-          if [ "$CMD_ID" -le "$LAST_ID_PROCESSED" ]; then
-            echo "No new command to process (CMD_ID=$CMD_ID, LAST_ID_PROCESSED=$LAST_ID_PROCESSED). Exiting..."
-            exit 0
-          fi
-
-          TS_START=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-          echo "$TS_START | ID=$CMD_ID | STATUS=RUNNING | CMD=$CMD_RAW" >> "$LOG_FILE"
-
-          echo "Executing command..."
-          set +e
-          CMD_OUTPUT=$(bash -lc "$CMD_RAW" 2>&1)
-          CMD_EXIT=$?
-          set -e
-
-          TS_END=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-
-          if [ $CMD_EXIT -eq 0 ]; then
-            STATUS="DONE"
-          else
-            STATUS="ERROR"
-          fi
-
-          echo "$TS_END | ID=$CMD_ID | STATUS=$STATUS | EXIT=$CMD_EXIT" >> "$LOG_FILE"
-          echo "----- OUTPUT (ID=$CMD_ID) -----" >> "$LOG_FILE"
-          echo "$CMD_OUTPUT" >> "$LOG_FILE"
-          echo "------------------------------" >> "$LOG_FILE"
-
-          # آپدیت state
-          echo "$CMD_ID" > "$STATE_FILE"
-
-          echo "Command finished with status $STATUS (exit=$CMD_EXIT)"
-          echo "=== Remote Shell Pro 2.0 done ==="
-
-      - name: Commit & Push results (skip CI)
-        run: |
-          set -e
-
-          git status
-
-          # اگر هیچ تغییری نیست، خارج شو
-          if git diff --quiet && git diff --cached --quiet; then
-            echo "No changes to commit."
-            exit 0
-          fi
-
-          ts=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-          git add commands.txt sessions.log .rshell_state || true
-
-          # اگر همچنان چیزی stage نشده، خارج شو
-          if git diff --cached --quiet; then
-            echo "No staged changes to commit."
-            exit 0
-          fi
-
-          git commit -m "Realtime execution $ts [skip ci]" || true
-          git push origin HEAD:main || true
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
