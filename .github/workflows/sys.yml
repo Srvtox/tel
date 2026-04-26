@@ -71,6 +71,12 @@ jobs:
                 echo "⚡ Executing ID=$ID → $line"
                 TS=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
+                # حذف پیشوند ex اگر وجود داشت
+                if [[ "$line" =~ ^ex[[:space:]]+ ]]; then
+                  line="${line#ex }"
+                  echo "🧹 Prefix 'ex' removed, now executing: $line"
+                fi
+
                 # -------------------------
                 #     HANDLE EXPORT
                 # -------------------------
@@ -111,7 +117,7 @@ jobs:
                 echo "----------------------------------" >> sessions.log
 
                 echo "$ID" > .rshell_state
-                git add sessions.log .rshell_state session/env
+                git add -f sessions.log .rshell_state session/env
                 git commit -m "exec $ID [skip ci]" || echo "⚠️ git commit failed"
                 git push || echo "⚠️ git push failed"
               fi
