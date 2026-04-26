@@ -1,4 +1,4 @@
-name: Remote Shell 9.0 FINAL BOSS EDITION
+name: Remote Shell 10.0 ULTRA OPS
 
 on:
   workflow_dispatch:
@@ -32,43 +32,40 @@ jobs:
       - name: Init State
         run: |
           mkdir -p session
-          touch commands.txt sessions.log .rshell_state session/env .last_reset
 
-          # مقدارهای پیش‌فرض
+          touch commands.txt
+          touch sessions.log
+          touch .rshell_state
+          touch session/env
+          touch session/cwd
+          touch .last_reset
+
           [ ! -s .rshell_state ] && echo 0 > .rshell_state
           [ ! -s session/env ] && echo "# Session Env Vars" > session/env
+          [ ! -s session/cwd ] && pwd > session/cwd
           [ ! -s .last_reset ] && date +%s > .last_reset
-
-      - name: Load Session Environment
-        run: |
-          echo "Loading session env..."
-          set -a
-          source session/env || true
-          set +a
 
       - name: Start Remote Shell Engine
         shell: bash
         run: |
-          echo "🚀 Remote Shell 9.0 FINAL BOSS EDITION Started"
+
+          echo "🚀 Remote Shell 10 ULTRA OPS Started"
 
           set -e
 
           while true; do
 
-            git fetch origin || echo "⚠️ fetch failed"
+            git fetch origin || true
 
             LOCAL=$(git rev-parse HEAD)
             REMOTE=$(git rev-parse origin/main)
+
             NOW=$(date +%s)
             LAST_RESET=$(cat .last_reset)
 
-            # Reset فقط اگر تغییر واقعی در ریموت باشد و از آخرین reset حداقل 5 ثانیه گذشته باشد
-            if [ "$LOCAL" != "$REMOTE" ] && [ $((NOW - LAST_RESET)) -gt 5 ]; then
-              echo "DEBUG: Safe Reset"
+            if [ "$LOCAL" != "$REMOTE" ] && [ $((NOW-LAST_RESET)) -gt 5 ]; then
               echo "$NOW" > .last_reset
               git reset --hard origin/main
-            else
-              echo "DEBUG: No reset needed"
             fi
 
             LAST_ID=$(cat .rshell_state)
@@ -76,71 +73,137 @@ jobs:
             NEWFOUND=0
 
             while IFS= read -r line; do
+
               COUNT=$((COUNT+1))
               ID=$COUNT
 
-              # خط خالی یا کامنت بپر
               [[ -z "$line" || "$line" =~ ^# ]] && continue
 
-              # اگر قبلا اجرا شده رد کن
               if [ "$ID" -le "$LAST_ID" ]; then
                 continue
               fi
 
-              # دستور جدید
               NEWFOUND=1
               TS=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
-              echo -e "\n🔵 EXECUTING ID=$ID : $line" | tee -a sessions.log
+              echo "" | tee -a sessions.log
+              echo "🔵 EXEC ID=$ID : $line" | tee -a sessions.log
 
-              # دستور export
+              # -------------------
+              # EXPORT ENV
+              # -------------------
+
               if [[ "$line" =~ ^export[[:space:]] ]]; then
+
                 VAR=$(echo "$line" | sed -E 's/export[[:space:]]+([A-Za-z_][A-Za-z0-9_]*)=.*/\1/')
                 grep -v "^export $VAR=" session/env > env.tmp || true
                 echo "$line" >> env.tmp
                 mv env.tmp session/env
 
-                source session/env || true
+                echo "$TS export updated" | tee -a sessions.log
 
-                echo "$TS | ID=$ID | export updated" | tee -a sessions.log
                 echo "$ID" > .rshell_state
                 git add -f session/env .rshell_state sessions.log
-                git commit -m "export update $ID [skip ci]" || true
+                git commit -m "env update $ID [skip ci]" || true
                 git push || true
+
                 continue
               fi
 
-              # اجرای دستورات ex
+              # -------------------
+              # EXECUTION
+              # -------------------
+
               set +e
+
               if [[ "$line" =~ ^ex[[:space:]] ]]; then
+
                 cmd="${line#ex }"
 
-                echo -e "\n🖥️ Command (ex): $cmd\n--------------------------------" | tee -a sessions.log
-                bash -c "source session/env && $cmd" 2>&1 | tee -a sessions.log
-                EXIT=${PIPESTATUS[0]}
+                cd "$(cat session/cwd)"
+
+                echo "🖥 Command: $cmd" | tee -a sessions.log
+                echo "--------------------------------" | tee -a sessions.log
+
+                SAFE_CMD="$cmd"
+
+                # cd persistence
+                if [[ "$SAFE_CMD" =~ ^cd[[:space:]] ]]; then
+
+                  TARGET="${SAFE_CMD#cd }"
+
+                  cd "$TARGET" 2>/dev/null
+
+                  pwd > session/cwd
+
+                  echo "📂 Directory changed to $(cat session/cwd)" | tee -a sessions.log
+
+                  EXIT=0
+
+                else
+
+                  # apt auto
+                  if [[ "$SAFE_CMD" =~ apt[[:space:]]+install ]]; then
+                    SAFE_CMD="sudo DEBIAN_FRONTEND=noninteractive $SAFE_CMD -y"
+                  fi
+
+                  if [[ "$SAFE_CMD" =~ apt[[:space:]]+update ]]; then
+                    SAFE_CMD="sudo $SAFE_CMD"
+                  fi
+
+                  if [[ "$SAFE_CMD" =~ apt[[:space:]]+upgrade ]]; then
+                    SAFE_CMD="sudo DEBIAN_FRONTEND=noninteractive $SAFE_CMD -y"
+                  fi
+
+                  # pip
+                  if [[ "$SAFE_CMD" =~ pip[[:space:]]+install ]]; then
+                    SAFE_CMD="pip install --break-system-packages ${SAFE_CMD#pip install }"
+                  fi
+
+                  # npm
+                  if [[ "$SAFE_CMD" =~ npm[[:space:]]+install ]]; then
+                    SAFE_CMD="$SAFE_CMD --yes"
+                  fi
+
+                  # background process
+                  if [[ "$SAFE_CMD" =~ ^bg[[:space:]] ]]; then
+                    SAFE_CMD="${SAFE_CMD#bg }"
+                    nohup bash -c "$SAFE_CMD" >> sessions.log 2>&1 &
+                    echo "🟢 Started background process" | tee -a sessions.log
+                    EXIT=0
+                  else
+                    bash -lc "source session/env && $SAFE_CMD" 2>&1 | tee -a sessions.log
+                    EXIT=${PIPESTATUS[0]}
+                  fi
+
+                fi
+
                 echo "--------------------------------" | tee -a sessions.log
 
               else
-                # اجرای عادی
-                bash -c "source session/env && $line" 2>&1 | tee -a sessions.log
+
+                bash -lc "source session/env && $line" 2>&1 | tee -a sessions.log
                 EXIT=${PIPESTATUS[0]}
+
               fi
+
               set -e
 
               echo "$TS | ID=$ID | EXIT=$EXIT" | tee -a sessions.log
+
               echo "$ID" > .rshell_state
 
-              # Push نتیجه
-              git add -f sessions.log .rshell_state session/env
+              git add -f sessions.log .rshell_state session/env session/cwd
               git commit -m "exec $ID [skip ci]" || true
               git push || true
 
             done < commands.txt
 
             if [ "$NEWFOUND" -eq 0 ]; then
-              echo "⏳ No new commands. Sleeping 10s..."
+              echo "⏳ idle..."
               sleep 10
             else
               sleep 2
             fi
+
           done
