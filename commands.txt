@@ -1,5 +1,2 @@
-ex exit
-ex apt install telegram-cli
-ex telegram-cli -k tg-server.pub
-ex telegram-cli -k tg-server.pub
-ex ls
+ex curl -fsSL https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -o cloudflared
+ex chmod +x cloudflared
