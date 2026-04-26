@@ -3,3 +3,4 @@ ex ls
 ex nmap
 ex apt install telegram-cli
 ex telegram-cli -k tg-server.pub
++9809170489497
