@@ -2,3 +2,4 @@ ex ls
 ex cat commands.txt
 ex mkdir test
 ex cd test
+ex pwd
