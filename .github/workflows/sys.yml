@@ -26,90 +26,109 @@ jobs:
         run: |
           git config user.name "dfs-bot"
           git config user.email "dfs@bot.local"
+          git config pull.rebase false
 
-      - name: Init Distributed FS
+      - name: Initialize Distributed FS directories and files
         run: |
           mkdir -p dfs/env dfs/logs dfs/nodes dfs/ops
           [ -f dfs/state ] || echo 0 > dfs/state
           [ -f dfs/env/session ] || echo "# dfs env" > dfs/env/session
-          echo "$(hostname)" > "dfs/nodes/$(hostname)"
+          echo "$(hostname)" > dfs/nodes/$(hostname)
 
-      - name: Load Env
-        run: |
-          set -a
-          source dfs/env/session 2>/dev/null || true
-          set +a
-
-      - name: Distributed FS Remote Shell
+      - name: Run Distributed FS Remote Shell
         env:
           GH_REPO: ${{ github.repository }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: |
           set +e
-          START=$(date +%s)
+          exec >/dev/null 2>&1
+
+          # File descriptor 200 is dedicated to locking dfs/.lock using flock
+          exec 200>dfs/.lock
+
+          lock() {
+            flock -x 200
+          }
+
+          unlock() {
+            flock -u 200
+            exec 200>&-
+          }
+
+          git_sync() {
+            git fetch origin >/dev/null 2>&1
+            git reset --hard origin/main >/dev/null 2>&1
+            git clean -fd >/dev/null 2>&1
+          }
+
+          git_commit_push() {
+            git add -f dfs/state dfs/env/session dfs/logs dfs/nodes dfs/ops >/dev/null 2>&1
+            git commit -m "dfs: update state and env [skip ci]" >/dev/null 2>&1 || true
+            git push >/dev/null 2>&1 || true
+          }
+
+          execute_command() {
+            local cmd="$1"
+            if [[ "$cmd" == docker\ * ]]; then
+              docker_cmd="${cmd#docker }"
+              bash -c "$docker_cmd" >/dev/null 2>&1
+            else
+              if [[ "$cmd" == *"&" ]]; then
+                bash -c "${cmd%&}" >/dev/null 2>&1 &
+              else
+                bash -c "$cmd" >/dev/null 2>&1
+              fi
+            fi
+          }
 
           echo "🚀 DFS Node $(hostname) started"
 
           while true; do
-            # ======= DFS Sync Phase =======
-            git fetch origin >/dev/null 2>&1
-            git reset --hard origin/main >/dev/null 2>&1
-            git clean -fd >/dev/null 2>&1
+            lock
 
-            # ======= Lock =======
-            LOCKFILE="dfs/.lock"
-            echo "$(hostname)" > "$LOCKFILE"
-            git add -f "$LOCKFILE"
-            git commit -m "lock $(hostname) [skip ci]" || true
-            git push || true
+            git_sync
 
-            sleep 1 # let lock propagate
+            # خواندن آخرین state اصلی
+            LAST_STATE=$(cat dfs/state 2>/dev/null || echo 0)
+            NEXT_STATE=$((LAST_STATE + 1))
 
-            # ======= Process Commands =======
-            LAST=$(cat dfs/state)
-            COUNT=0
+            CMD_FILE="dfs/ops/${NEXT_STATE}.cmd"
 
-            while IFS= read -r line || [ -n "$line" ]; do
-              COUNT=$((COUNT+1))
-              ID=$COUNT
+            if [ -f "$CMD_FILE" ]; then
+              while IFS= read -r line || [ -n "$line" ]; do
+                [[ -z "$line" ]] && continue
+                [[ "$line" =~ ^# ]] && continue
 
-              [ "$ID" -le "$LAST" ] && continue
-              [ -z "$line" ] && continue
-              [[ "$line" =~ ^# ]] && continue
+                echo "Node $(hostname) executing ID=$NEXT_STATE: $line"
 
-              echo "Node $(hostname) executing ID=$ID: $line"
+                if [[ "$line" =~ ^export[[:space:]] ]]; then
+                  # حذف متغیر از session و افزودن متغیر جدید
+                  VAR_NAME=$(echo "$line" | sed -E 's/export[ ]+([A-Za-z_][A-Za-z0-9_]*)=.*/\1/')
+                  grep -v "^export $VAR_NAME=" dfs/env/session > dfs/env/tmp || true
+                  echo "$line" >> dfs/env/tmp
+                  mv dfs/env/tmp dfs/env/session
+                  # بارگذاری مجدد متغیرها
+                  source dfs/env/session 2>/dev/null || true
+                else
+                  bash -c "source dfs/env/session && $line" >> dfs/logs/output.log 2>&1
+                fi
 
-              TS=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+                echo "$NEXT_STATE" > dfs/state
+                git_commit_push
+              done < "$CMD_FILE"
+            fi
 
-              # ======= Handle export VAR =======
-              if [[ "$line" =~ ^export ]]; then
-                VAR=$(echo "$line" | sed -E 's/export[ ]+([A-Za-z_][A-Za-z0-9_]*)=.*/\1/')
-                grep -v "^export $VAR=" dfs/env/session > dfs/env/tmp
-                echo "$line" >> dfs/env/tmp
-                mv dfs/env/tmp dfs/env/session
-                source dfs/env/session
-              else
-                bash -c "source dfs/env/session && $line" >> dfs/logs/output.log 2>&1
-                EXIT=$?
-              fi
+            unlock
 
-              echo "$ID" > dfs/state
+            # Restart logic: پس از 21000 ثانیه (~5.8 ساعت) اجرای مجدد workflow
+            CURRENT_TIME=$(date +%s)
+            if [ "$START" == "" ]; then
+              START=$CURRENT_TIME
+            fi
 
-              git add -f dfs/state dfs/env/session dfs/logs
-              git commit -m "dfs exec $ID [skip ci]" || true
-              git push || true
-            done < commands.txt
-
-            # ======= Unlock =======
-            rm -f "$LOCKFILE"
-            git rm -f "$LOCKFILE" || true
-            git commit -m "unlock $(hostname) [skip ci]" || true
-            git push || true
-
-            # ======= Restart Logic =======
-            NOW=$(date +%s)
-            if [ $((NOW - START)) -gt 21000 ]; then
+            ELAPSED=$((CURRENT_TIME - START))
+            if [ "$ELAPSED" -ge 21000 ]; then
               curl -X POST \
                 -H "Authorization: Bearer $GH_TOKEN" \
                 -H "Accept: application/vnd.github+json" \
@@ -118,5 +137,5 @@ jobs:
               exit 0
             fi
 
-            sleep 2
+            sleep 3
           done
