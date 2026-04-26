@@ -310,3 +310,33 @@ Unpacking telegram-cli (1.3.1+git20160323.6547c0b21-3.1build3) ...
 Progress: [ 43%] [########################..................................]
 --------------------------------
 2026-04-26T09:26:08Z | ID=2 | EXIT=0
+
+🔵 EXEC ID=3 : ex telegram-cli -k tg-server.pub
+🖥 Command: telegram-cli -k tg-server.pub
+--------------------------------
+Running kernel seems to be up-to-date.
+
+No services need to be restarted.
+
+No containers need to be restarted.
+
+No user sessions are running outdated binaries.
+
+No VM guests are running outdated hypervisor (qemu) binaries on this host.
+runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
+runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
+runner@runnervmeorf1:~/work/tel/tel$ telegram-cli -k tg-server.pub
+Telegram-cli version 1.4.1, Copyright (C) 2013-2015 Vitaly Valtman
+Telegram-cli comes with ABSOLUTELY NO WARRANTY; for details type `show_license'.
+This is free software, and you are welcome to redistribute it
+under certain conditions; type `show_license' for details.
+Telegram-cli uses libtgl version 2.1.0
+Telegram-cli includes software developed by the OpenSSL Project
+for use in the OpenSSL Toolkit. (http://www.openssl.org/)
+I: config dir=[/home/runner/.config/telegram-cli]
+[/home/runner/.config/telegram-cli] created
+[/home/runner/.telegram-cli] created
+[/home/runner/.telegram-cli/downloads] created
+>
+--------------------------------
+2026-04-26T09:28:17Z | ID=3 | EXIT=0
