@@ -87,7 +87,7 @@ jobs:
                   echo "----------------------------------" >> sessions.log
 
                   echo "$ID" > .rshell_state
-                  git add sessions.log .rshell_state session/env
+                  git add -f sessions.log .rshell_state session/env
                   git commit -m "session update $ID [skip ci]" || echo "⚠️ git commit failed"
                   git push || echo "⚠️ git push failed"
                   continue
