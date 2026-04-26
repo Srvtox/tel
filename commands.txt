@@ -1,1 +1,2 @@
 ex top
+ex apt install cmake
