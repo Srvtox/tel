@@ -1,4 +1,4 @@
-name: Remote Shell 4.0 Ultimate Pro Max
+name: Remote Shell 4.0 Ultimate Pro Max LogStream Edition
 
 on:
   workflow_dispatch:
@@ -17,6 +17,7 @@ jobs:
     timeout-minutes: 355
 
     steps:
+
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
@@ -32,6 +33,7 @@ jobs:
         run: |
           mkdir -p session
           touch commands.txt sessions.log .rshell_state session/env
+
           if [ ! -s .rshell_state ]; then echo 0 > .rshell_state; fi
           if [ ! -s session/env ]; then echo "# Session environment vars" > session/env; fi
 
@@ -45,15 +47,15 @@ jobs:
       - name: Start Remote Shell Engine (loop)
         shell: bash
         run: |
-          echo "🚀 Remote Shell 4.0 Ultimate Pro Max Started"
+          echo "🚀 Remote Shell 4.0 Ultimate Pro Max LogStream Edition Started"
           START_TIME=$(date +%s)
-          # اجازه بدیم اسکریپت ادامه پیدا کنه حتی اگر بعضی دستورات fail بشن
+
+          # اجازه می‌دیم خطاها اسکریپت رو نابود نکنن
           set -e
 
           while true; do
-            # Safely fetch & reset to origin/main
-            git fetch origin || echo "⚠️ Warning: git fetch failed"
-            git reset --hard origin/main || echo "⚠️ Warning: git reset failed"
+            git fetch origin || echo "⚠️ git fetch failed"
+            git reset --hard origin/main || echo "⚠️ git reset failed"
 
             LAST_ID=$(cat .rshell_state)
             COUNT=0
@@ -62,7 +64,6 @@ jobs:
               COUNT=$((COUNT+1))
               ID=$COUNT
 
-              # نادیده گرفتن خط‌های خالی یا کامنت‌ها
               if [[ -z "$line" || "$line" =~ ^# ]]; then
                 continue
               fi
@@ -71,67 +72,75 @@ jobs:
                 echo "⚡ Executing ID=$ID → $line"
                 TS=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
-                # حذف پیشوند ex اگر وجود داشت
+                # حذف پیشوند ex
                 if [[ "$line" =~ ^ex[[:space:]]+ ]]; then
                   line="${line#ex }"
-                  echo "🧹 Prefix 'ex' removed, now executing: $line"
+                  echo "🧹 Prefix 'ex' removed → executing: $line"
                 fi
 
                 # -------------------------
-                #     HANDLE EXPORT
+                #   HANDLE EXPORT
                 # -------------------------
                 if echo "$line" | grep -q '^export[[:space:]]'; then
                   VAR=$(echo "$line" | sed -E 's/export[[:space:]]+([A-Za-z_][A-Za-z0-9_]*)=.*/\1/')
+
                   grep -v "^export $VAR=" session/env > session/env.tmp || true
                   echo "$line" >> session/env.tmp
                   mv session/env.tmp session/env
 
-                  source session/env || echo "⚠️ Warning: sourcing session/env failed"
+                  source session/env || echo "⚠️ failed to source env"
 
                   echo "$TS | ID=$ID | export updated" >> sessions.log
                   echo "$line" >> sessions.log
                   echo "----------------------------------" >> sessions.log
 
                   echo "$ID" > .rshell_state
+
                   git add -f sessions.log .rshell_state session/env
-                  git commit -m "session update $ID [skip ci]" || echo "⚠️ git commit failed"
-                  git push || echo "⚠️ git push failed"
+                  git commit -m "session update $ID [skip ci]" || true
+                  git push || true
+                  
                   continue
                 fi
 
                 # -------------------------
-                #     EXECUTE NORMAL CMD
+                #   NORMAL COMMANDS
                 # -------------------------
                 set +e
+
+                # اجرای موازی
                 if echo "$line" | grep -q '&[[:space:]]*$'; then
-                  bash -c "source session/env && $line" >> sessions.log 2>&1 &
+                  echo "⚙️ Running in background..."
+                  bash -c "source session/env && $line" 2>&1 | tee -a sessions.log &
                   EXIT=0
-                  echo "⚙️ Parallel execution started for ID=$ID"
+
                 else
-                  bash -c "source session/env && $line" >> sessions.log 2>&1
-                  EXIT=$?
+                  # اجرای همزمان + نمایش در لاگ اکشن + ذخیره در sessions.log
+                  bash -c "source session/env && $line" 2>&1 | tee -a sessions.log
+                  EXIT=${PIPESTATUS[0]}
+
                 fi
+
                 set -e
 
                 echo "$TS | ID=$ID | EXIT=$EXIT" >> sessions.log
                 echo "----------------------------------" >> sessions.log
 
                 echo "$ID" > .rshell_state
+
                 git add -f sessions.log .rshell_state session/env
-                git commit -m "exec $ID [skip ci]" || echo "⚠️ git commit failed"
-                git push || echo "⚠️ git push failed"
+                git commit -m "exec $ID [skip ci]" || true
+                git push || true
               fi
             done < commands.txt
 
-            # -------------------------
-            #     AUTO RESTART SYSTEM
-            # -------------------------
+            # Restart if runtime > 6 hours
             NOW=$(date +%s)
             ELAPSED=$((NOW - START_TIME))
 
             if [ "$ELAPSED" -gt 21000 ]; then
-              echo "♻️ Auto Restarting Remote Shell 4.0 Ultimate Pro Max..."
-              gh workflow run remote-shell.yml || echo "⚠️ Failed to trigger restart workflow"
+              echo "♻ Restarting Remote Shell Automatically..."
+              gh workflow run remote-shell.yml || echo "⚠️ restart failed"
               exit 0
             fi
 
