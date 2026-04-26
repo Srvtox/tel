@@ -29,12 +29,19 @@ jobs:
           git config user.email "remote-shell@users.noreply.github.com"
           git config pull.rebase false
 
+      - name: Install Interactive Tools
+        run: |
+          sudo apt update
+          sudo apt install -y tmux expect
+
       - name: Init State
         run: |
           mkdir -p session
 
           touch commands.txt
           touch sessions.log
+          touch input.txt
+          touch .last_input
           touch .rshell_state
           touch session/env
           touch session/cwd
@@ -52,6 +59,12 @@ jobs:
           echo "🚀 Remote Shell 10 ULTRA OPS Started"
 
           set -e
+
+          SESSION="rshell"
+
+          if ! tmux has-session -t $SESSION 2>/dev/null; then
+            tmux new-session -d -s $SESSION
+          fi
 
           while true; do
 
@@ -110,10 +123,6 @@ jobs:
                 continue
               fi
 
-              # -------------------
-              # EXECUTION
-              # -------------------
-
               set +e
 
               if [[ "$line" =~ ^ex[[:space:]] ]]; then
@@ -127,22 +136,18 @@ jobs:
 
                 SAFE_CMD="$cmd"
 
-                # cd persistence
                 if [[ "$SAFE_CMD" =~ ^cd[[:space:]] ]]; then
 
                   TARGET="${SAFE_CMD#cd }"
 
                   cd "$TARGET" 2>/dev/null
-
                   pwd > session/cwd
 
                   echo "📂 Directory changed to $(cat session/cwd)" | tee -a sessions.log
-
                   EXIT=0
 
                 else
 
-                  # apt auto
                   if [[ "$SAFE_CMD" =~ apt[[:space:]]+install ]]; then
                     SAFE_CMD="sudo DEBIAN_FRONTEND=noninteractive $SAFE_CMD -y"
                   fi
@@ -155,25 +160,31 @@ jobs:
                     SAFE_CMD="sudo DEBIAN_FRONTEND=noninteractive $SAFE_CMD -y"
                   fi
 
-                  # pip
                   if [[ "$SAFE_CMD" =~ pip[[:space:]]+install ]]; then
                     SAFE_CMD="pip install --break-system-packages ${SAFE_CMD#pip install }"
                   fi
 
-                  # npm
                   if [[ "$SAFE_CMD" =~ npm[[:space:]]+install ]]; then
                     SAFE_CMD="$SAFE_CMD --yes"
                   fi
 
-                  # background process
                   if [[ "$SAFE_CMD" =~ ^bg[[:space:]] ]]; then
                     SAFE_CMD="${SAFE_CMD#bg }"
                     nohup bash -c "$SAFE_CMD" >> sessions.log 2>&1 &
                     echo "🟢 Started background process" | tee -a sessions.log
                     EXIT=0
                   else
-                    bash -lc "source session/env && $SAFE_CMD" 2>&1 | tee -a sessions.log
-                    EXIT=${PIPESTATUS[0]}
+
+                    # -------- INTERACTIVE EXECUTION --------
+                    tmux send-keys -t $SESSION "cd $(cat session/cwd)" Enter
+                    tmux send-keys -t $SESSION "source session/env 2>/dev/null" Enter
+                    tmux send-keys -t $SESSION "$SAFE_CMD" Enter
+
+                    sleep 2
+
+                    tmux capture-pane -pt $SESSION >> sessions.log
+
+                    EXIT=0
                   fi
 
                 fi
@@ -198,6 +209,32 @@ jobs:
               git push || true
 
             done < commands.txt
+
+            # -------- INPUT INJECTION --------
+
+            if [ -f input.txt ]; then
+
+              CUR_HASH=$(md5sum input.txt | awk '{print $1}')
+              OLD_HASH=$(cat .last_input 2>/dev/null || echo "")
+
+              if [ "$CUR_HASH" != "$OLD_HASH" ]; then
+
+                LAST_INPUT=$(tail -n 1 input.txt)
+
+                echo "📥 Injecting input: $LAST_INPUT" | tee -a sessions.log
+
+                tmux send-keys -t $SESSION "$LAST_INPUT" Enter
+
+                echo "$CUR_HASH" > .last_input
+
+                tmux capture-pane -pt $SESSION >> sessions.log
+
+                git add sessions.log .last_input
+                git commit -m "input injected [skip ci]" || true
+                git push || true
+
+              fi
+            fi
 
             if [ "$NEWFOUND" -eq 0 ]; then
               echo "⏳ idle..."
