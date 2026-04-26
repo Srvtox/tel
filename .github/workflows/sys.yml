@@ -1,4 +1,4 @@
-name: Remote Shell 4.0 Ultimate Pro Max
+name: Remote Shell 5.0 Ultra Stable Edition
 
 on:
   workflow_dispatch:
@@ -27,30 +27,35 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Prepare environment and files
+      - name: Prepare persistent session folder
         run: |
           mkdir -p session
-          touch commands.txt sessions.log .rshell_state session/env
-          if [ ! -s .rshell_state ]; then echo 0 > .rshell_state; fi
-          if [ ! -s session/env ]; then echo "# Session environment vars" > session/env; fi
+          touch commands.txt
+          [ -f sessions.log ] || touch sessions.log
+          [ -f .rshell_state ] || echo 0 > .rshell_state
+          [ -f session/env ] || echo "# session vars" > session/env
 
       - name: Load session environment
         run: |
-          echo "Loading saved session environment..."
           set -a
           source session/env 2>/dev/null || true
           set +a
 
       - name: Start Remote Shell Engine (loop)
         shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "🚀 Remote Shell 4.0 Ultimate Pro Max Started"
+          echo "🚀 Remote Shell 5.0 Ultra Stable Edition Started"
           START_TIME=$(date +%s)
           set -e
 
           while true; do
-            git fetch origin
-            git reset --hard origin/main
+            # sync only source repo, not session data
+            git fetch origin >/dev/null 2>&1
+            git reset --hard origin/main >/dev/null 2>&1
+            git clean -fd >/dev/null 2>&1
 
             LAST_ID=$(cat .rshell_state)
             COUNT=0
@@ -59,74 +64,65 @@ jobs:
               COUNT=$((COUNT+1))
               ID=$COUNT
 
-              if [[ -z "$line" || "$line" =~ ^# ]]; then
-                continue
-              fi
+              [ -z "$line" ] && continue
+              [[ "$line" =~ ^# ]] && continue
 
               if [ "$ID" -gt "$LAST_ID" ]; then
-                echo "⚡ Executing ID=$ID → $line"
                 TS=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+                echo "⚡ Running ID=$ID: $line"
 
-                # -------------------------
-                #     HANDLE EXPORT
-                # -------------------------
-                if echo "$line" | grep -q '^export[[:space:]]'; then
+                # ---------- EXPORT ----------
+                if echo "$line" | grep -q '^export '; then
                   VAR=$(echo "$line" | sed -E 's/export[[:space:]]+([A-Za-z_][A-Za-z0-9_]*)=.*/\1/')
                   grep -v "^export $VAR=" session/env > session/env.tmp || true
                   echo "$line" >> session/env.tmp
                   mv session/env.tmp session/env
-
                   source session/env
 
-                  echo "$TS | ID=$ID | export updated" >> sessions.log
-                  echo "$line" >> sessions.log
-                  echo "----------------------------------" >> sessions.log
+                  {
+                    echo "$TS | ID=$ID | UPDATED SESSION VAR"
+                    echo "$line"
+                    echo "----------------------------------"
+                  } >> sessions.log
 
                   echo "$ID" > .rshell_state
-                  git add sessions.log .rshell_state session/env
+                  git add .rshell_state session/env sessions.log
                   git commit -m "session update $ID [skip ci]" || true
                   git push || true
                   continue
                 fi
 
-                # -------------------------
-                #     EXECUTE NORMAL CMD
-                # -------------------------
+                # ---------- NORMAL COMMAND ----------
                 set +e
-                if echo "$line" | grep -q '&[[:space:]]*$'; then
+                if echo "$line" | grep -q '&$'; then
                   bash -c "source session/env && $line" >> sessions.log 2>&1 &
                   EXIT=0
-                  echo "⚙️ Parallel execution started for ID=$ID"
                 else
                   bash -c "source session/env && $line" >> sessions.log 2>&1
                   EXIT=$?
                 fi
                 set -e
 
-                echo "$TS | ID=$ID | EXIT=$EXIT" >> sessions.log
-                echo "----------------------------------" >> sessions.log
+                {
+                  echo "$TS | ID=$ID | EXIT=$EXIT"
+                  echo "----------------------------------"
+                } >> sessions.log
 
                 echo "$ID" > .rshell_state
-                git add sessions.log .rshell_state session/env
+
+                git add .rshell_state session/env sessions.log
                 git commit -m "exec $ID [skip ci]" || true
                 git push || true
               fi
             done < commands.txt
 
-            # -------------------------
-            #     AUTO RESTART SYSTEM
-            # -------------------------
+            # Auto-restart before 6h limit
             NOW=$(date +%s)
-            ELAPSED=$((NOW - START_TIME))
-
-            if [ "$ELAPSED" -gt 21000 ]; then
-              echo "♻️ Auto Restarting Remote Shell 4.0 Ultimate Pro Max..."
+            if [ $((NOW - START_TIME)) -gt 21000 ]; then
+              echo "♻ Restarting Remote Shell 5.0..."
               gh workflow run remote-shell.yml
               exit 0
             fi
 
             sleep 2
           done
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
