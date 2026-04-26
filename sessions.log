@@ -114,3 +114,33 @@ MiB Swap:   3072.0 total,   3072.0 free,      0.0 used.  15060.9 avail Mem
      17 root      20   0       0      0      0 S   0.0   0.0   0:00.00 rcu_exp+
 --------------------------------
 2026-04-26T19:27:13Z | ID=3 | EXIT=0
+
+🔵 EXEC ID=4 : ex top
+🖥 Command: top
+--------------------------------
+top - 19:27:17 up 9 min,  0 user,  load average: 0.00, 0.07, 0.06
+Tasks: 158 total,   1 running, 157 sleeping,   0 stopped,   0 zombie
+%Cpu(s):  0.0 us,  0.2 sy,  0.0 ni, 99.8 id,  0.0 wa,  0.0 hi,  0.0 si,  0.0 st
+MiB Mem :  15989.7 total,  11143.0 free,    922.8 used,   4297.0 buff/cache
+MiB Swap:   3072.0 total,   3072.0 free,      0.0 used.  15066.9 avail Mem
+
+    PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND
+   2864 runner    20   0   12380   5904   3692 R   0.8   0.0   0:00.51 top
+      1 root      20   0   22792  14456   9944 S   0.0   0.1   0:02.59 /sbin/i+
+      2 root      20   0       0      0      0 S   0.0   0.0   0:00.00 [kthrea+
+      3 root      20   0       0      0      0 S   0.0   0.0   0:00.00 [pool_w+
+      4 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 [kworke+
+      5 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 [kworke+
+      6 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 [kworke+
+      7 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 [kworke+
+      8 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 [kworke+
+     10 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 [kworke+
+     11 root      20   0       0      0      0 I   0.0   0.0   0:00.11 [kworke+
+     12 root      20   0       0      0      0 I   0.0   0.0   0:00.02 [kworke+
+     13 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 [kworke+
+     14 root      20   0       0      0      0 S   0.0   0.0   0:00.15 [ksofti+
+     15 root      20   0       0      0      0 I   0.0   0.0   0:00.07 [rcu_sc+
+     16 root      20   0       0      0      0 S   0.0   0.0   0:00.00 [rcu_ex+
+     17 root      20   0       0      0      0 S   0.0   0.0   0:00.00 [rcu_ex+
+--------------------------------
+2026-04-26T19:27:16Z | ID=4 | EXIT=0
