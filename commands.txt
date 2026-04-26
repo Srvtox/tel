@@ -1,1 +1,2 @@
 ex exit
+ex apt install telegram-cli
