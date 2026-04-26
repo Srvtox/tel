@@ -5,3 +5,4 @@ ex cd test
 ex pwd
 ex ls -al
 ex cd test
+ex pwd
