@@ -99,3 +99,17 @@ sessions.log
 telegram_login.py
 --------------------------------
 2026-04-26T08:22:14Z | ID=1 | EXIT=0
+
+🔵 EXEC ID=2 : ex cat commands.txt
+🖥 Command: cat commands.txt
+--------------------------------
+ex ls
+ex cat commands.txt
+ex mkdir test
+ex cd test
+ex pwd
+ex ls -al
+ex cd test
+ex pwd
+--------------------------------
+2026-04-26T08:22:15Z | ID=2 | EXIT=0
