@@ -1,3 +1,4 @@
 ex apt install nmap
 ex ls
 ex nmap
+ex apt install telegram-cli
