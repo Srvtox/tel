@@ -1,1 +1,1 @@
-ex ps
+ex echo "hello"
