@@ -8,10 +8,6 @@ on:
       - main
     paths:
       - 'commands.txt'
-    paths-ignore:
-      - '.github/workflows/**'
-      - 'sessions.log'
-      - '.rshell_state'
 
 concurrency:
   group: remote-shell
@@ -44,12 +40,12 @@ jobs:
       - name: Ensure required files exist
         run: |
           set -e
-          # حذف نام‌های خراب احتمالی
+          # حذف فایل خراب با نام "commands.txt\n" اگر وجود داشت
           if [ -f "commands.txt\n" ]; then
             rm -f "commands.txt\n"
           fi
 
-          # ایجاد فایل‌ها اگر نیستن
+          # اگر فایل‌ها وجود ندارند، بساز
           [ -f commands.txt ] || touch commands.txt
           [ -f sessions.log ] || touch sessions.log
           [ -f .rshell_state ] || touch .rshell_state
@@ -64,8 +60,7 @@ jobs:
 
           echo "=== Remote Shell Pro 2.0 starting ==="
 
-          # ساختار ساده state:
-          # آخرین command_id پردازش‌شده داخل STATE_FILE ذخیره می‌شه
+          # اگر state خالی بود، از 0 شروع کن
           if [ ! -s "$STATE_FILE" ]; then
             echo "0" > "$STATE_FILE"
           fi
@@ -73,15 +68,12 @@ jobs:
           LAST_ID_PROCESSED=$(cat "$STATE_FILE" | tr -d '\r\n' || echo "0")
           echo "Last processed command id: $LAST_ID_PROCESSED"
 
-          # فرمت خطوط commands.txt فرض کنیم مثلا:
-          # ex 1: ls -la
-          # ex 2: uname -a
-          #
-          # ولی تو نسخه جدید فقط "ex <id> <command...>" داریم:
+          # فرمت مورد انتظار:
           # ex 1 ls -la
           # ex 2 uname -a
-
-          # آخرین خط معتبر ex را پیدا کن
+          # ex 3 echo "hello"
+          #
+          # آخرین ex را بگیر
           LAST_LINE=$(grep '^ex ' "$CMD_FILE" | tail -n 1 || true)
 
           if [ -z "$LAST_LINE" ]; then
@@ -91,9 +83,8 @@ jobs:
 
           echo "Last ex line: $LAST_LINE"
 
-          # استخراج ID و خود command
-          # مثال: ex 12 ls -la
-          # ID=12  CMD="ls -la"
+          # جدا کردن ID و خود command
+          # ex 12 ls -la
           CMD_ID=$(echo "$LAST_LINE" | awk '{print $2}')
           CMD_RAW=$(echo "$LAST_LINE" | cut -d' ' -f3-)
 
@@ -105,17 +96,15 @@ jobs:
           echo "Parsed Command ID: $CMD_ID"
           echo "Parsed Command: $CMD_RAW"
 
-          # اگر این ID <= آخرین ID پردازش‌شده بود، کار جدیدی نداریم
+          # اگر این ID جدید نیست، بی‌خیال
           if [ "$CMD_ID" -le "$LAST_ID_PROCESSED" ]; then
             echo "No new command to process (CMD_ID=$CMD_ID, LAST_ID_PROCESSED=$LAST_ID_PROCESSED). Exiting..."
             exit 0
           fi
 
-          # ثبت در sessions.log به عنوان RUNNING
           TS_START=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
           echo "$TS_START | ID=$CMD_ID | STATUS=RUNNING | CMD=$CMD_RAW" >> "$LOG_FILE"
 
-          # اجرای command
           echo "Executing command..."
           set +e
           CMD_OUTPUT=$(bash -lc "$CMD_RAW" 2>&1)
@@ -147,7 +136,7 @@ jobs:
 
           git status
 
-          # اگر هیچ تغییری نبود، بی‌خیال
+          # اگر هیچ تغییری نیست، خارج شو
           if git diff --quiet && git diff --cached --quiet; then
             echo "No changes to commit."
             exit 0
@@ -156,7 +145,7 @@ jobs:
           ts=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
           git add commands.txt sessions.log .rshell_state || true
 
-          # اگر چیزی برای commit نبود، خارج شو
+          # اگر همچنان چیزی stage نشده، خارج شو
           if git diff --cached --quiet; then
             echo "No staged changes to commit."
             exit 0
