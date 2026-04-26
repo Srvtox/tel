@@ -89,3 +89,13 @@ drwxr-xr-x 2 runner runner 4096 Apr 26 08:05 test
 /home/runner/work/tel/tel
 --------------------------------
 2026-04-26T08:08:43Z | ID=8 | EXIT=0
+
+🔵 EXEC ID=1 : ex ls
+🖥 Command: ls
+--------------------------------
+commands.txt
+session
+sessions.log
+telegram_login.py
+--------------------------------
+2026-04-26T08:22:14Z | ID=1 | EXIT=0
