@@ -1,2 +1,1 @@
-ex curl -fsSL https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -o cloudflared
-ex chmod +x cloudflared
+
