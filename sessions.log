@@ -1,14 +1,6 @@
 
 runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
 runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
-runner@runnervmeorf1:~/work/tel/tel$ ping -c 4 1.1.1.1
-PING 1.1.1.1 (1.1.1.1) 56(84) bytes of data.
-
---- 1.1.1.1 ping statistics ---
-4 packets transmitted, 0 received, 100% packet loss, time 3086ms
-
-runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
-runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
 runner@runnervmeorf1:~/work/tel/tel$ ping -c 4 aparat.com
 PING aparat.com (185.147.179.11) 56(84) bytes of data.
 
@@ -21,6 +13,14 @@ runner@runnervmeorf1:~/work/tel/tel$ ps
     PID TTY          TIME CMD
    2862 pts/0    00:00:00 bash
    3578 pts/0    00:00:00 ps
+runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
+runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
+runner@runnervmeorf1:~/work/tel/tel$ curl -I https://aparat.com
+HTTP/2 504
+cache-control: no-cache
+content-type: text/html
+x-rr-pop: sg-sin-dc1
+
 runner@runnervmeorf1:~/work/tel/tel$
 --------------------------------
-2026-04-27T12:16:09Z | ID=7 | EXIT=0
+2026-04-27T12:18:50Z | ID=8 | EXIT=0
