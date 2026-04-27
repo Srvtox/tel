@@ -27,3 +27,4 @@ ex systemctl status nginx
 ex clear
 ex curl -s https://ipinfo.io/ip
 ex : q
+ex q
