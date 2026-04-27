@@ -2,3 +2,4 @@ ex mkdir test
 ex test
 ex pwd
 ex ping -c 4 1.1.1.1
+ex ping -c 4 1.1.1.1
