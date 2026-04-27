@@ -1,6 +1,3 @@
-
-/usr/lib/xorg/Xorg.wrap: Only console users are allowed to run the X server
-شروع FFmpeg جهت کپچر و ارسال به RTMP...
 استریم در حال اجراست. PID ffmpeg: 30157
 تمام لاگ‌ها در فایل stream.log.txt ذخیره می‌شود.
 xinit: giving up
@@ -21,6 +18,9 @@ tt
 cd /home/runner/work/tel/tel
 source session/env 2>/dev/null
 chmod +x sas.sh
+cd /home/runner/work/tel/tel
+source session/env 2>/dev/null
+./sas.sh
 
 --------------------------------
-2026-04-27T14:18:25Z | ID=50 | EXIT=0
+2026-04-27T14:18:28Z | ID=51 | EXIT=0
