@@ -1,19 +1,42 @@
-sudo bash -c '
-systemctl stop ufw 2>/dev/null
-ufw disable 2>/dev/null
+#!/bin/bash
+set -e
 
-iptables -F
-iptables -X
-iptables -Z
-iptables -t nat -F
-iptables -t nat -X
-iptables -P INPUT ACCEPT
-iptables -P OUTPUT ACCEPT
-iptables -P FORWARD ACCEPT
+echo "=============================================="
+echo "🚀 Installing Cloudflare WARP..."
+echo "=============================================="
 
-nft flush ruleset 2>/dev/null
-systemctl stop nftables 2>/dev/null
-systemctl disable nftables 2>/dev/null
+# Add Cloudflare WARP repo and key
+curl -fsSL https://pkg.cloudflareclient.com/pubkey.gpg \
+  | sudo gpg --dearmor -o /usr/share/keyrings/cloudflare-warp.gpg
 
-echo "✅ ALL FIREWALL RULES FLUSHED. ALL PORTS ARE OPEN."
-'
+echo "deb [signed-by=/usr/share/keyrings/cloudflare-warp.gpg] https://pkg.cloudflareclient.com/ $(lsb_release -cs) main" \
+  | sudo tee /etc/apt/sources.list.d/cloudflare-client.list
+
+echo "🔄 Updating package list..."
+sudo apt-get update -y
+
+echo "⬇️ Installing cloudflare-warp..."
+sudo apt-get install -y cloudflare-warp
+
+echo
+echo "=============================================="
+echo "🔗 Connecting WARP..."
+echo "=============================================="
+
+sudo warp-cli --accept-tos registration new || true
+sudo warp-cli --accept-tos connect || true
+
+sleep 6
+
+echo
+echo "=============================================="
+echo "📊 WARP STATUS"
+echo "=============================================="
+sudo warp-cli status || true
+
+echo
+echo "=============================================="
+echo "🌐 IP INFO (after WARP connection)"
+echo "=============================================="
+curl -s https://ipinfo.io
+echo
