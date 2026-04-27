@@ -1,1 +1,2 @@
 ex mkdir test
+ex test
