@@ -3,3 +3,4 @@ ex test
 ex pwd
 ex ping -c 4 1.1.1.1
 ex ping -c 4 1.1.1.1
+ex ping -c 4 aparat.com
