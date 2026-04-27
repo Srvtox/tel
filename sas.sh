@@ -2,7 +2,7 @@
 
 set -e
 
-STREAM_URL="rtmp://rtmp.cdn.asset.aparat.com:443/event/ef6d74868f69db63a3c11a33a8f899d8f?s=54d20ca45fba421a"
+STREAM_URL="rtmp://5.106.7.97/stream/69ef6cc71e16402b99d336a6takmjjwrggedgamooxbyfsmxdvhwvizj?pt=qyybesmjkbtpycattnfujdkowpqdikyh"
 
 echo "[1] Installing packages..."
 sudo apt update
