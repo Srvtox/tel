@@ -49,3 +49,4 @@ ex cat stream.log.txt
 ex tt
 ex chmod +x sas.sh
 ex ./sas.sh
+ex test
