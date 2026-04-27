@@ -8,6 +8,10 @@ VIDEO_SIZE=1280x720
 FRAMERATE=25
 BITRATE=2500k
 
+echo "[1] Installing packages..."
+sudo apt update
+sudo apt install -y ffmpeg xvfb xfce4 xfce4-terminal pulseaudio x11vnc
+
 echo "کشتن Xvfb قبلی و پاک کردن قفل‌ها..."
 pkill -f "Xvfb $DISPLAY_NUM" || true
 rm -f /tmp/.X1-lock /tmp/.X11-unix/X1
