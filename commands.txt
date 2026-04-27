@@ -40,3 +40,4 @@ ex chmod +x sas.sh
 ex ./sas.sh
 ex test
 ex test
+ex nc -vz 5.106.7.97 1935
