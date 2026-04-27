@@ -1,13 +1,3 @@
-
-(xfce4-notifyd:28896): dbind-WARNING **: 14:06:15.860: AT-SPI: Error retrieving
-accessibility bus address: org.freedesktop.DBus.Error.ServiceUnknown: The name o
-rg.a11y.Bus was not provided by any .service files
-
-(nm-applet:28916): Gtk-WARNING **: 14:06:15.895: Can't set a parent on widget wh
-ich has a parent
-Process already running (98:Address already in use). Exiting.
-Another notification daemon is running, exiting
-Another notification daemon is running, exiting
 cd /home/runner/work/tel/tel
 runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
 runner@runnervmeorf1:~/work/tel/tel$ test
@@ -21,6 +11,16 @@ Connection to 5.106.7.97 1935 port [tcp/*] succeeded!
 runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
 runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
 runner@runnervmeorf1:~/work/tel/tel$ chmod +x sas.sh
-runner@runnervmeorf1:~/work/tel/tel$
+runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
+runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
+runner@runnervmeorf1:~/work/tel/tel$ ./sas.sh
+شروع اجرای Xvfb روی شماره صفحه :1...
+(EE)
+Fatal server error:
+(EE) Server is already active for display 1
+        If this server is no longer running, remove /tmp/.X1-lock
+        and start again.
+(EE)
+
 --------------------------------
-2026-04-27T14:13:05Z | ID=44 | EXIT=0
+2026-04-27T14:13:08Z | ID=45 | EXIT=0
