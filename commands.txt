@@ -7,3 +7,4 @@ ex ping -c 4 aparat.com
 ex ps
 ex curl -I https://aparat.com
 ex echo " "
+ex curl -I https://google.com
