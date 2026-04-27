@@ -33,3 +33,4 @@ ex curl -I http://104.28.159.134
 ex test
 ex chmod +x sas.sh
 ex ./sas.sh
+ex test
