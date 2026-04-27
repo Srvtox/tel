@@ -1,6 +1,3 @@
-'unsafe-inline' https: http:;report-uri https://csp.withgoogle.com/csp/gws/other
--hp
-date: Mon, 27 Apr 2026 12:21:15 GMT
 expires: Wed, 27 May 2026 12:21:15 GMT
 cache-control: public, max-age=2592000
 server: gws
@@ -21,6 +18,9 @@ runner@runnervmeorf1:~/work/tel/tel$ sudo bash -c '
 > cd /home/runner/work/tel/tel
 > source session/env 2>/dev/null
 > clear
+> cd /home/runner/work/tel/tel
+> source session/env 2>/dev/null
+> ls -al
 >
 --------------------------------
-2026-04-27T12:42:14Z | ID=32 | EXIT=0
+2026-04-27T12:42:16Z | ID=33 | EXIT=0
