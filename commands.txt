@@ -7,3 +7,4 @@ ex cat listening_ports.txt
 ex ufw status verbose
 ex sudo ufw status verbose
 ex sudo ufw disable
+ex sudo ufw status
