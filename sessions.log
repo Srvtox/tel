@@ -1,2 +1,2 @@
-✅ ALL FIREWALL RULES FLUSHED. ALL PORTS ARE OPEN.
-2026-04-27T12:37:19Z | ID=28 | EXIT=0
+bash: -c: line 1: unexpected EOF while looking for matching `''
+2026-04-27T12:37:19Z | ID=29 | EXIT=2
