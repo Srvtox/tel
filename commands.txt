@@ -12,3 +12,4 @@ ex ping -c 4 1.1.1.1
 ex chmod +x sas.sh
 ex ./sas.sh
 ex test
+ex test
