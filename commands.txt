@@ -1,3 +1,4 @@
 ex lsof -i -P -n > open_ports.txt
 ex ls -al
 ex cat open_ports.txt
+ex ss -tulnp > listening_ports.txt
