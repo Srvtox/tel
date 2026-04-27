@@ -59,3 +59,33 @@ drwxr-xr-x 2 runner runner 4096 Apr 27 11:39 session
 runner@runnervmeorf1:~/work/tel/tel$
 --------------------------------
 2026-04-27T11:40:00Z | ID=2 | EXIT=0
+
+🔵 EXEC ID=3 : ex cat open_ports.txt
+🖥 Command: cat open_ports.txt
+--------------------------------
+drwxr-xr-x 2 runner runner 4096 Apr 27 11:37 live
+-rw-r--r-- 1 runner runner  795 Apr 27 11:39 open_ports.txt
+drwxr-xr-x 2 runner runner 4096 Apr 27 11:39 session
+-rw-r--r-- 1 runner runner  543 Apr 27 11:40 sessions.log
+-rw-r--r-- 1 runner runner  267 Apr 27 11:37 telegram_login.py
+runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
+runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
+runner@runnervmeorf1:~/work/tel/tel$ cat open_ports.txt
+COMMAND    PID   USER   FD   TYPE DEVICE SIZE/OFF NODE NAME
+hosted-co 2088 runner    7u  IPv4  11945      0t0  TCP 10.1.1.121:58742->140.82.
+114.24:443 (ESTABLISHED)
+hosted-co 2088 runner    8u  IPv4   9017      0t0  TCP 10.1.1.121:51584->169.254
+.169.254:80 (ESTABLISHED)
+Runner.Li 2171 runner  129u  IPv6  14704      0t0  TCP 10.1.1.121:46084->20.85.1
+30.105:443 (ESTABLISHED)
+Runner.Li 2171 runner  137u  IPv6  14709      0t0  TCP 10.1.1.121:46102->20.85.1
+30.105:443 (ESTABLISHED)
+Runner.Wo 2186 runner  133u  IPv6  16956      0t0  TCP 10.1.1.121:60770->140.82.
+112.22:443 (ESTABLISHED)
+Runner.Wo 2186 runner  155u  IPv6   9196      0t0  TCP 10.1.1.121:36912->140.82.
+114.21:443 (ESTABLISHED)
+Runner.Wo 2186 runner  181u  IPv6  18491      0t0  TCP 10.1.1.121:36546->57.150.
+87.97:443 (ESTABLISHED)
+runner@runnervmeorf1:~/work/tel/tel$
+--------------------------------
+2026-04-27T11:40:46Z | ID=3 | EXIT=0
