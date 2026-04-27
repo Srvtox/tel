@@ -47,3 +47,5 @@ ex ./sas.sh
 ex vees
 ex cat stream.log.txt
 ex tt
+ex chmod +x sas.sh
+ex ./sas.sh
