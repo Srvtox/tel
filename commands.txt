@@ -5,3 +5,4 @@ ex ss -tulnp > listening_ports.txt
 ex clear
 ex cat listening_ports.txt
 ex ufw status verbose
+ex sudo ufw status verbose
