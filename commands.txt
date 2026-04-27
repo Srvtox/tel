@@ -1,12 +1,1 @@
-ex lsof -i -P -n > open_ports.txt
-ex ls -al
-ex cat open_ports.txt
-ex ss -tulnp > listening_ports.txt
-ex clear
-ex cat listening_ports.txt
-ex ufw status verbose
-ex sudo ufw status verbose
-ex sudo ufw disable
-ex sudo ufw status
-ex cloudflared tunnel --url http://localhost:8080
-ex cd /
+
