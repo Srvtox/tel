@@ -13,14 +13,14 @@ index.html    live       sessions.log  telegram_login.py
 runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
 runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
 runner@runnervmeorf1:~/work/tel/tel$ chmod +x st.sh
+runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
+runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
+runner@runnervmeorf1:~/work/tel/tel$ ./st.sh
+Firewall stopped and disabled on system startup
+✅ ALL FIREWALL RULES FLUSHED. ALL PORTS ARE OPEN.
 runner@runnervmeorf1:~/work/tel/tel$
 
 
 
-
-
-
-
-
 --------------------------------
-2026-04-27T12:47:40Z | ID=3 | EXIT=0
+2026-04-27T12:47:43Z | ID=4 | EXIT=0
