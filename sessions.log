@@ -1,26 +1,26 @@
-Hit:7 https://packages.microsoft.com/ubuntu/24.04/prod noble InRelease
-Hit:8 https://dl.google.com/linux/chrome-stable/deb stable InRelease
-Hit:2 http://azure.archive.ubuntu.com/ubuntu noble InRelease
-Hit:3 http://azure.archive.ubuntu.com/ubuntu noble-updates InRelease
-Hit:4 http://azure.archive.ubuntu.com/ubuntu noble-backports InRelease
-Hit:9 https://pkg.cloudflareclient.com noble InRelease
-Get:5 http://azure.archive.ubuntu.com/ubuntu noble-security InRelease [126 kB]
-Get:10 http://azure.archive.ubuntu.com/ubuntu noble-security/main amd64 Packages
- [1623 kB]
-Get:11 http://azure.archive.ubuntu.com/ubuntu noble-security/universe amd64 Pack
-ages [1182 kB]
-Fetched 2932 kB in 1s (3551 kB/s)
-Reading package lists... Done
-Reading package lists... Done
-Building dependency tree... Done
-Reading state information... Done
-xvfb is already the newest version (2:21.1.12-1ubuntu1.5).
-xfce4 is already the newest version (4.18).
-xfce4-terminal is already the newest version (1.1.3-1build1).
-dbus-x11 is already the newest version (1.14.10-4ubuntu4.1).
-ffmpeg is already the newest version (7:6.1.1-3ubuntu5).
-x11vnc is already the newest version (0.9.16-10).
-wget is already the newest version (1.21.4-1ubuntu4.1).
+(xfsettingsd:20083): dbind-WARNING **: 13:14:44.558: AT-SPI: Error retrieving ac
+cessibility bus address: org.freedesktop.DBus.Error.ServiceUnknown: The name org
+.a11y.Bus was not provided by any .service files
 
+(evolution-alarm-notify:20079): dbind-WARNING **: 13:14:44.566: AT-SPI: Error re
+trieving accessibility bus address: org.freedesktop.DBus.Error.ServiceUnknown: T
+he name org.a11y.Bus was not provided by any .service files
+
+(nm-applet:20129): dbind-WARNING **: 13:14:44.590: AT-SPI: Error retrieving acce
+ssibility bus address: org.freedesktop.DBus.Error.ServiceUnknown: The name org.a
+11y.Bus was not provided by any .service files
+Process already running (98:Address already in use). Exiting.
+
+(xfce4-notifyd:20081): dbind-WARNING **: 13:14:44.619: AT-SPI: Error retrieving
+accessibility bus address: org.freedesktop.DBus.Error.ServiceUnknown: The name o
+rg.a11y.Bus was not provided by any .service files
+Another notification daemon is running, exiting
+
+(nm-applet:20129): Gtk-WARNING **: 13:14:44.694: Can't set a parent on widget wh
+ich has a parent
+cd /home/runner/work/tel/tel
+runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
+runner@runnervmeorf1:~/work/tel/tel$ test
+runner@runnervmeorf1:~/work/tel/tel$
 --------------------------------
-2026-04-27T13:14:14Z | ID=17 | EXIT=0
+2026-04-27T13:14:51Z | ID=18 | EXIT=0
