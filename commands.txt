@@ -4,3 +4,5 @@ ex chmod +x st.sh
 ex ./st.sh
 ex sudo ss -tulnp
 ex ./st.sh
+ex chmod +x st.sh
+ex ./st.sh
