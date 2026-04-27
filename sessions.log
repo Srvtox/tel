@@ -15,12 +15,12 @@ emd/systemd-sysv-install.
 Executing: /usr/lib/systemd/systemd-sysv-install enable nginx
 Created symlink /etc/systemd/system/multi-user.target.wants/nginx.service → /usr
 /lib/systemd/system/nginx.service.
+runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
+runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
+runner@runnervmeorf1:~/work/tel/tel$ sudo systemctl start nginx
 runner@runnervmeorf1:~/work/tel/tel$
 
 
 
-
-
-
 --------------------------------
-2026-04-27T13:30:43Z | ID=24 | EXIT=0
+2026-04-27T13:30:46Z | ID=25 | EXIT=0
