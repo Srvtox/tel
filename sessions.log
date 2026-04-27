@@ -1,26 +1,26 @@
-  libavutil      58. 29.100 / 58. 29.100
-  libavcodec     60. 31.102 / 60. 31.102
-  libavformat    60. 16.100 / 60. 16.100
-  libavdevice    60.  3.100 / 60.  3.100
-  libavfilter     9. 12.100 /  9. 12.100
-  libswscale      7.  5.100 /  7.  5.100
-  libswresample   4. 12.100 /  4. 12.100
-  libpostproc    57.  3.100 / 57.  3.100
-[x11grab @ 0x55b19030f100] Stream #0: not enough frames to estimate rate; consid
-er increasing probesize
-Input #0, x11grab, from ':99.0':
-  Duration: N/A, start: 1777295378.645969, bitrate: 884736 kb/s
-  Stream #0:0: Video: rawvideo (BGR[0] / 0x524742), bgr0, 1280x720, 884736 kb/s,
- 30 fps, 1000k tbr, 1000k tbn
-[in#1 @ 0x55b190317280] Error opening input: No such process
-Error opening input file default.
-Error opening input files: No such process
-runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
-runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
-runner@runnervmeorf1:~/work/tel/tel$ test
-runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
-runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
-runner@runnervmeorf1:~/work/tel/tel$ chmod +x sas.sh
-runner@runnervmeorf1:~/work/tel/tel$
+Hit:7 https://packages.microsoft.com/ubuntu/24.04/prod noble InRelease
+Hit:8 https://dl.google.com/linux/chrome-stable/deb stable InRelease
+Hit:2 http://azure.archive.ubuntu.com/ubuntu noble InRelease
+Hit:3 http://azure.archive.ubuntu.com/ubuntu noble-updates InRelease
+Hit:4 http://azure.archive.ubuntu.com/ubuntu noble-backports InRelease
+Hit:9 https://pkg.cloudflareclient.com noble InRelease
+Get:5 http://azure.archive.ubuntu.com/ubuntu noble-security InRelease [126 kB]
+Get:10 http://azure.archive.ubuntu.com/ubuntu noble-security/main amd64 Packages
+ [1623 kB]
+Get:11 http://azure.archive.ubuntu.com/ubuntu noble-security/universe amd64 Pack
+ages [1182 kB]
+Fetched 2932 kB in 1s (3551 kB/s)
+Reading package lists... Done
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+xvfb is already the newest version (2:21.1.12-1ubuntu1.5).
+xfce4 is already the newest version (4.18).
+xfce4-terminal is already the newest version (1.1.3-1build1).
+dbus-x11 is already the newest version (1.14.10-4ubuntu4.1).
+ffmpeg is already the newest version (7:6.1.1-3ubuntu5).
+x11vnc is already the newest version (0.9.16-10).
+wget is already the newest version (1.21.4-1ubuntu4.1).
+
 --------------------------------
-2026-04-27T13:14:12Z | ID=16 | EXIT=0
+2026-04-27T13:14:14Z | ID=17 | EXIT=0
