@@ -1,26 +1,26 @@
+● nginx.service - A high performance web server and a reverse proxy server
+     Loaded: loaded (/usr/lib/systemd/system/nginx.service; enabled; preset: en>
+     Active: active (running) since Mon 2026-04-27 13:30:46 UTC; 46s ago
+       Docs: man:nginx(8)
+    Process: 22703 ExecStartPre=/usr/sbin/nginx -t -q -g daemon on; master_proc>
+    Process: 22705 ExecStart=/usr/sbin/nginx -g daemon on; master_process on; (>
+   Main PID: 22706 (nginx)
+      Tasks: 5 (limit: 19164)
+     Memory: 4.9M (peak: 5.4M)
+        CPU: 12ms
+     CGroup: /system.slice/nginx.service
+             ├─22706 "nginx: master process /usr/sbin/nginx -g daemon on; maste>
+             ├─22707 "nginx: worker process"
+             ├─22708 "nginx: worker process"
+             ├─22709 "nginx: worker process"
+             └─22710 "nginx: worker process"
 
-                   SUMMARY OF LESS COMMANDS
-
-      Commands marked with * may be preceded by a number, N.
-      Notes in parentheses indicate the behavior if N is given.
-      A key preceded by a caret indicates the Ctrl key; thus ^K is ctrl-K.
-
-  h  H                 Display this help.
-  q  :q  Q  :Q  ZZ     Exit.
- ---------------------------------------------------------------------------
-
-                           MOVING
-
-  e  ^E  j  ^N  CR  *  Forward  one line   (or N lines).
-  y  ^Y  k  ^K  ^P  *  Backward one line   (or N lines).
-  f  ^F  ^V  SPACE  *  Forward  one window (or N lines).
-  b  ^B  ESC-v      *  Backward one window (or N lines).
-  z                 *  Forward  one window (and set window to N).
-  w                 *  Backward one window (and set window to N).
-  ESC-SPACE         *  Forward  one window, but don't stop at end-of-file.
-  d  ^D             *  Forward  one half-window (and set half-window to N).
-  u  ^U             *  Backward one half-window (and set half-window to N).
-  ESC-)  RightArrow *  Right one half screen width (or N positions).
-Cannot write to "://ipinfo.io/ip"  (press RETURN)
+Apr 27 13:30:46 runnervmeorf1 systemd[1]: Starting nginx.service - A high perfo>
+Apr 27 13:30:46 runnervmeorf1 systemd[1]: Started nginx.service - A high perfor>
+~
+~
+~
+~
+lines 1-19/19 (END)
 --------------------------------
-2026-04-27T13:39:41Z | ID=28 | EXIT=0
+2026-04-27T13:42:33Z | ID=29 | EXIT=0
