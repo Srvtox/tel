@@ -1,3 +1,4 @@
+
 ex curl -O "https://raw.githubusercontent.com/Srvtox/tel/refs/heads/main/st.sh"
 ex ls
 ex chmod +x st.sh
@@ -44,3 +45,4 @@ ex nc -vz 5.106.7.97 1935
 ex chmod +x sas.sh
 ex ./sas.sh
 ex vees
+ex cat stream.log.txt
