@@ -1,1 +1,2 @@
-2026-04-27T12:37:08Z | ID=13 | EXIT=1
+iptables v1.8.10 (nf_tables): Could not fetch rule set generation id: Permission denied (you must be root)
+2026-04-27T12:37:09Z | ID=15 | EXIT=4
