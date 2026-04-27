@@ -1,34 +1,39 @@
 #!/bin/bash
-
 set -e
 
-STREAM_URL="rtmp://5.106.7.97/stream/69ef6cc71e16402b99d336a6takmjjwrggedgamooxbyfsmxdvhwvizj?pt=qyybesmjkbtpycattnfujdkowpqdikyh"
+# متغیرهای مهم
+DISPLAY_NUM=:1
+LOGFILE=stream.log.txt
+RTMP_URL="rtmp://5.106.7.97/stream/69ef6cc71e16402b99d336a6takmjjwrggedgamooxbyfsmxdvhwvizj?pt=qyybesmjkbtpycattnfujdkowpqdikyh"
+VIDEO_SIZE=1280x720
+FRAMERATE=25
+BITRATE=2500k
 
-echo "[1] Installing packages..."
-sudo apt update
-sudo apt install -y ffmpeg xvfb xfce4 xfce4-terminal pulseaudio x11vnc
+echo "شروع اجرای Xvfb روی شماره صفحه $DISPLAY_NUM..."
+Xvfb $DISPLAY_NUM -screen 0 ${VIDEO_SIZE}x24 &
+XVFB_PID=$!
 
-echo "[2] Starting Xvfb..."
-export DISPLAY=:1
-Xvfb :1 -screen 0 1280x720x24 &
-sleep 2
+sleep 5 # صبر کن Xvfb کامل بالا بیاد
 
-echo "[3] Starting XFCE desktop..."
-xfce4-session &
-sleep 5
+echo "اجرای XFCE4..."
+startxfce4 &
 
-echo "[4] Starting virtual audio (optional)..."
-pulseaudio --start
-pactl load-module module-null-sink sink_name=VirtualSink
-AUDIO_INPUT="-f pulse -i VirtualSink.monitor"
+sleep 10 # صبر کن محیط گرافیکی راه بیفته
 
-echo "[5] Starting stream to Aparat..."
-ffmpeg \
-    -video_size 1280x720 \
-    -framerate 30 \
-    -f x11grab -i $DISPLAY \
-    $AUDIO_INPUT \
-    -c:v libx264 -preset veryfast -b:v 2500k \
-    -maxrate 2500k -bufsize 5000k \
-    -c:a aac -b:a 128k \
-    -f flv "$STREAM_URL"
+echo "شروع FFmpeg جهت کپچر و ارسال به RTMP..."
+export DISPLAY=$DISPLAY_NUM
+
+ffmpeg -f x11grab -framerate $FRAMERATE -video_size $VIDEO_SIZE -i ${DISPLAY_NUM}.0 \
+  -c:v libx264 -preset veryfast -b:v $BITRATE -pix_fmt yuv420p \
+  -f flv "$RTMP_URL" > $LOGFILE 2>&1 &
+
+FFMPEG_PID=$!
+
+echo "استریم در حال اجراست. PID ffmpeg: $FFMPEG_PID"
+echo "تمام لاگ‌ها در فایل $LOGFILE ذخیره می‌شود."
+
+# صبر کردن تا ffmpeg تموم کنه (در صورت تمایل)
+wait $FFMPEG_PID
+
+# در صورت پایان، Xvfb رو ببند
+kill $XVFB_PID
