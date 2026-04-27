@@ -1,26 +1,26 @@
-runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
-runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
-runner@runnervmeorf1:~/work/tel/tel$ sudo DEBIAN_FRONTEND=noninteractive sudo ap
-t install nginx -y -y
-Reading package lists... Done
-Building dependency tree... Done
-Reading state information... Done
-nginx is already the newest version (1.24.0-2ubuntu7.6).
-0 upgraded, 0 newly installed, 0 to remove and 37 not upgraded.
-runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
-runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
-runner@runnervmeorf1:~/work/tel/tel$ sudo systemctl enable nginx
-Synchronizing state of nginx.service with SysV service script with /usr/lib/syst
-emd/systemd-sysv-install.
-Executing: /usr/lib/systemd/systemd-sysv-install enable nginx
-Created symlink /etc/systemd/system/multi-user.target.wants/nginx.service → /usr
-/lib/systemd/system/nginx.service.
-runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
-runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
 runner@runnervmeorf1:~/work/tel/tel$ sudo systemctl start nginx
-runner@runnervmeorf1:~/work/tel/tel$
+runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
+runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
+runner@runnervmeorf1:~/work/tel/tel$ systemctl status nginx
+● nginx.service - A high performance web server and a reverse proxy server
+     Loaded: loaded (/usr/lib/systemd/system/nginx.service; enabled; preset: en>
+     Active: active (running) since Mon 2026-04-27 13:30:46 UTC; 46s ago
+       Docs: man:nginx(8)
+    Process: 22703 ExecStartPre=/usr/sbin/nginx -t -q -g daemon on; master_proc>
+    Process: 22705 ExecStart=/usr/sbin/nginx -g daemon on; master_process on; (>
+   Main PID: 22706 (nginx)
+      Tasks: 5 (limit: 19164)
+     Memory: 4.9M (peak: 5.4M)
+        CPU: 12ms
+     CGroup: /system.slice/nginx.service
+             ├─22706 "nginx: master process /usr/sbin/nginx -g daemon on; maste>
+             ├─22707 "nginx: worker process"
+             ├─22708 "nginx: worker process"
+             ├─22709 "nginx: worker process"
+             └─22710 "nginx: worker process"
 
-
-
+Apr 27 13:30:46 runnervmeorf1 systemd[1]: Starting nginx.service - A high perfo>
+Apr 27 13:30:46 runnervmeorf1 systemd[1]: Started nginx.service - A high perfor>
+lines 1-19/19 (END)
 --------------------------------
-2026-04-27T13:30:46Z | ID=25 | EXIT=0
+2026-04-27T13:31:33Z | ID=26 | EXIT=0
