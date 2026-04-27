@@ -17,3 +17,4 @@ ex chmod +x sas.sh
 ex ./sas.sh
 ex test
 ex test
+ex curl -s https://ipinfo.io
