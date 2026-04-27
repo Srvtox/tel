@@ -1,26 +1,26 @@
 runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
 runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
-runner@runnervmeorf1:~/work/tel/tel$ curl -O "https://raw.githubusercontent.com/
-Srvtox/tel/refs/heads/main/st.sh"
-  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
-                                 Dload  Upload   Total   Spent    Left  Speed
-100   391  100   391    0     0   2727      0 --:--:-- --:--:-- --:--:--  2734
-runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
-runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
-runner@runnervmeorf1:~/work/tel/tel$ ls
-commands.txt  input.txt  session       st.sh
-index.html    live       sessions.log  telegram_login.py
-runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
-runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
-runner@runnervmeorf1:~/work/tel/tel$ chmod +x st.sh
-runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
-runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
-runner@runnervmeorf1:~/work/tel/tel$ ./st.sh
-Firewall stopped and disabled on system startup
-✅ ALL FIREWALL RULES FLUSHED. ALL PORTS ARE OPEN.
+runner@runnervmeorf1:~/work/tel/tel$ sudo ss -tulnp
+Netid  State    Recv-Q   Send-Q       Local Address:Port     Peer Address:Port
+Process
+udp    UNCONN   0        0               127.0.0.54:53            0.0.0.0:*
+ users:(("systemd-resolve",pid=509,fd=16))
+udp    UNCONN   0        0            127.0.0.53%lo:53            0.0.0.0:*
+ users:(("systemd-resolve",pid=509,fd=14))
+udp    UNCONN   0        0          10.1.0.221%eth0:68            0.0.0.0:*
+ users:(("systemd-network",pid=716,fd=21))
+udp    UNCONN   0        0                127.0.0.1:323           0.0.0.0:*
+ users:(("chronyd",pid=1086,fd=6))
+udp    UNCONN   0        0                    [::1]:323              [::]:*
+ users:(("chronyd",pid=1086,fd=7))
+tcp    LISTEN   0        4096            127.0.0.54:53            0.0.0.0:*
+ users:(("systemd-resolve",pid=509,fd=17))
+tcp    LISTEN   0        4096         127.0.0.53%lo:53            0.0.0.0:*
+ users:(("systemd-resolve",pid=509,fd=15))
+tcp    LISTEN   0        4096               0.0.0.0:22            0.0.0.0:*
+ users:(("systemd",pid=1,fd=137))
+tcp    LISTEN   0        4096                  [::]:22               [::]:*
+ users:(("systemd",pid=1,fd=138))
 runner@runnervmeorf1:~/work/tel/tel$
-
-
-
 --------------------------------
-2026-04-27T12:47:43Z | ID=4 | EXIT=0
+2026-04-27T12:48:49Z | ID=5 | EXIT=0
