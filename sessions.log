@@ -7,6 +7,14 @@ Building dependency tree... Done
 Reading state information... Done
 nginx is already the newest version (1.24.0-2ubuntu7.6).
 0 upgraded, 0 newly installed, 0 to remove and 37 not upgraded.
+runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
+runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
+runner@runnervmeorf1:~/work/tel/tel$ sudo systemctl enable nginx
+Synchronizing state of nginx.service with SysV service script with /usr/lib/syst
+emd/systemd-sysv-install.
+Executing: /usr/lib/systemd/systemd-sysv-install enable nginx
+Created symlink /etc/systemd/system/multi-user.target.wants/nginx.service → /usr
+/lib/systemd/system/nginx.service.
 runner@runnervmeorf1:~/work/tel/tel$
 
 
@@ -14,13 +22,5 @@ runner@runnervmeorf1:~/work/tel/tel$
 
 
 
-
-
-
-
-
-
-
-
 --------------------------------
-2026-04-27T13:30:40Z | ID=23 | EXIT=0
+2026-04-27T13:30:43Z | ID=24 | EXIT=0
