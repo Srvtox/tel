@@ -1,6 +1,3 @@
-sh --enable-libsvtav1 --enable-libx264 --enable-libzmq --enable-libzvbi --enable
--lv2 --enable-sdl2 --enable-libplacebo --enable-librav1e --enable-pocketsphinx -
--enable-librsvg --enable-libjxl --enable-shared
   libavutil      58. 29.100 / 58. 29.100
   libavcodec     60. 31.102 / 60. 31.102
   libavformat    60. 16.100 / 60. 16.100
@@ -21,6 +18,9 @@ Error opening input files: No such process
 runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
 runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
 runner@runnervmeorf1:~/work/tel/tel$ test
+runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
+runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
+runner@runnervmeorf1:~/work/tel/tel$ chmod +x sas.sh
 runner@runnervmeorf1:~/work/tel/tel$
 --------------------------------
-2026-04-27T13:09:46Z | ID=15 | EXIT=0
+2026-04-27T13:14:12Z | ID=16 | EXIT=0
