@@ -1,7 +1,4 @@
 source session/env 2>/dev/null
-vees
-cd /home/runner/work/tel/tel
-source session/env 2>/dev/null
 cat stream.log.txt
 cd /home/runner/work/tel/tel
 source session/env 2>/dev/null
@@ -21,6 +18,9 @@ tail -n 100 stream.log.txt
 cd /home/runner/work/tel/tel
 source session/env 2>/dev/null
 ls
+cd /home/runner/work/tel/tel
+source session/env 2>/dev/null
+curl -O "https://raw.githubusercontent.com/Srvtox/tel/refs/heads/main/st.sh"
 
 --------------------------------
-2026-04-27T14:22:22Z | ID=54 | EXIT=0
+2026-04-27T14:35:28Z | ID=2 | EXIT=0
