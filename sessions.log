@@ -1,6 +1,3 @@
-content-length: 220
-x-xss-protection: 0
-x-frame-options: SAMEORIGIN
 alt-svc: h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
 
 runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
@@ -21,6 +18,9 @@ runner@runnervmeorf1:~/work/tel/tel$ sudo bash -c '
 > cd /home/runner/work/tel/tel
 > source session/env 2>/dev/null
 > exit
+> cd /home/runner/work/tel/tel
+> source session/env 2>/dev/null
+> curl -O "https://raw.githubusercontent.com/Srvtox/tel/refs/heads/main/st.sh"
 >
 --------------------------------
-2026-04-27T12:43:24Z | ID=34 | EXIT=0
+2026-04-27T12:43:26Z | ID=35 | EXIT=0
