@@ -1,3 +1,12 @@
+runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
+runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
+runner@runnervmeorf1:~/work/tel/tel$ sudo DEBIAN_FRONTEND=noninteractive sudo ap
+t install nginx -y -y
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+nginx is already the newest version (1.24.0-2ubuntu7.6).
+0 upgraded, 0 newly installed, 0 to remove and 37 not upgraded.
 runner@runnervmeorf1:~/work/tel/tel$
 
 
@@ -13,14 +22,5 @@ runner@runnervmeorf1:~/work/tel/tel$
 
 
 
-
-
-
-
-
-
-
-
-
 --------------------------------
-2026-04-27T13:30:37Z | ID=22 | EXIT=0
+2026-04-27T13:30:40Z | ID=23 | EXIT=0
