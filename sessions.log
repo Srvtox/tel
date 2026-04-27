@@ -1,6 +1,3 @@
-elay=0 failed: Connection timed out
-[rtmp @ 0x557d3ed61fc0] Cannot open connection tcp://rtmp.cdn.asset.aparat.com:4
-43?tcp_nodelay=0
 [out#0/flv @ 0x557d3ed583c0] Error opening output rtmp://rtmp.cdn.asset.aparat.c
 om:443/event/ef6d74868f69db63a3c11a33a8f899d8f?s=54d20ca45fba421a: Connection ti
 med out
@@ -21,6 +18,9 @@ PING rtmp.cdn.asset.aparat.com (185.147.178.62) 56(84) bytes of data.
 runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
 runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
 runner@runnervmeorf1:~/work/tel/tel$ test
+runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
+runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
+runner@runnervmeorf1:~/work/tel/tel$ chmod +x sas.sh
 runner@runnervmeorf1:~/work/tel/tel$
 --------------------------------
-2026-04-27T13:59:24Z | ID=38 | EXIT=0
+2026-04-27T14:05:44Z | ID=39 | EXIT=0
