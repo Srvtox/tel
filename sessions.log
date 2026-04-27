@@ -1,26 +1,26 @@
-Get:1 file:/etc/apt/apt-mirrors.txt Mirrorlist [144 B]
-Hit:2 http://azure.archive.ubuntu.com/ubuntu noble InRelease
-Hit:3 http://azure.archive.ubuntu.com/ubuntu noble-updates InRelease
-Hit:4 http://azure.archive.ubuntu.com/ubuntu noble-backports InRelease
-Hit:5 http://azure.archive.ubuntu.com/ubuntu noble-security InRelease
-Hit:6 https://dl.google.com/linux/chrome-stable/deb stable InRelease
-Hit:7 https://packages.microsoft.com/repos/azure-cli noble InRelease
-Hit:8 https://pkg.cloudflareclient.com noble InRelease
-Hit:9 https://packages.microsoft.com/ubuntu/24.04/prod noble InRelease
-Reading package lists... Done
-Building dependency tree... Done
-Reading state information... Done
-37 packages can be upgraded. Run 'apt list --upgradable' to see them.
-Reading package lists... Done
-Building dependency tree... Done
-Reading state information... Done
-ffmpeg is already the newest version (7:6.1.1-3ubuntu5).
-xvfb is already the newest version (2:21.1.12-1ubuntu1.5).
-xfce4 is already the newest version (4.18).
-xfce4-terminal is already the newest version (1.1.3-1build1).
-pulseaudio is already the newest version (1:16.1+dfsg1-2ubuntu10.1).
-x11vnc is already the newest version (0.9.16-10).
-0 upgraded, 0 newly installed, 0 to remove and 37 not upgraded.
+cessibility bus address: org.freedesktop.DBus.Error.ServiceUnknown: The name org
+.a11y.Bus was not provided by any .service files
 
+(evolution-alarm-notify:28894): dbind-WARNING **: 14:06:15.777: AT-SPI: Error re
+trieving accessibility bus address: org.freedesktop.DBus.Error.ServiceUnknown: T
+he name org.a11y.Bus was not provided by any .service files
+
+(nm-applet:28916): dbind-WARNING **: 14:06:15.803: AT-SPI: Error retrieving acce
+ssibility bus address: org.freedesktop.DBus.Error.ServiceUnknown: The name org.a
+11y.Bus was not provided by any .service files
+
+(xfce4-notifyd:28896): dbind-WARNING **: 14:06:15.860: AT-SPI: Error retrieving
+accessibility bus address: org.freedesktop.DBus.Error.ServiceUnknown: The name o
+rg.a11y.Bus was not provided by any .service files
+
+(nm-applet:28916): Gtk-WARNING **: 14:06:15.895: Can't set a parent on widget wh
+ich has a parent
+Process already running (98:Address already in use). Exiting.
+Another notification daemon is running, exiting
+Another notification daemon is running, exiting
+cd /home/runner/work/tel/tel
+runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
+runner@runnervmeorf1:~/work/tel/tel$ test
+runner@runnervmeorf1:~/work/tel/tel$
 --------------------------------
-2026-04-27T14:05:47Z | ID=40 | EXIT=0
+2026-04-27T14:06:23Z | ID=41 | EXIT=0
