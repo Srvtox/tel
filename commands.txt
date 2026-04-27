@@ -3,3 +3,4 @@ ex apt install cmake
 ex perl -e '$a="a"x1024x1024x1024; sleep 600;'
 ex top
 ex nc -vz rtmp.cdn.asset.aparat.com 443
+ex ping -c 10 aparat.com
