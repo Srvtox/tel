@@ -1,6 +1,3 @@
-شروع اجرای Xvfb روی شماره صفحه :1...
-(EE)
-Fatal server error:
 (EE) Server is already active for display 1
         If this server is no longer running, remove /tmp/.X1-lock
         and start again.
@@ -21,6 +18,9 @@ vees
 cd /home/runner/work/tel/tel
 source session/env 2>/dev/null
 vees
+cd /home/runner/work/tel/tel
+source session/env 2>/dev/null
+cat stream.log.txt
 
 --------------------------------
-2026-04-27T14:15:34Z | ID=47 | EXIT=0
+2026-04-27T14:15:37Z | ID=48 | EXIT=0
