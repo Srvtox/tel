@@ -204,3 +204,33 @@ ping -c 10 aparat.com
 
 --------------------------------
 2026-04-27T09:16:36Z | ID=6 | EXIT=0
+
+🔵 EXEC ID=7 : ex lsof -i -P -n
+🖥 Command: lsof -i -P -n
+--------------------------------
+ping -c 10 aparat.com
+nc: connect to rtmp.cdn.asset.aparat.com (185.147.178.62) port 443 (tcp) failed:
+ Connection timed out
+runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
+runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
+runner@runnervmeorf1:~/work/tel/tel$ ping -c 10 aparat.com
+PING aparat.com (185.147.179.11) 56(84) bytes of data.
+
+--- aparat.com ping statistics ---
+10 packets transmitted, 0 received, 100% packet loss, time 9222ms
+
+runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
+runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
+runner@runnervmeorf1:~/work/tel/tel$ lsof -i -P -n
+COMMAND    PID   USER   FD   TYPE DEVICE SIZE/OFF NODE NAME
+hosted-co 2055 runner    7u  IPv4  10999      0t0  TCP 10.1.0.82:48790->140.82.1
+13.24:443 (ESTABLISHED)
+Runner.Li 2088 runner  129u  IPv6  10157      0t0  TCP 10.1.0.82:56038->20.85.13
+0.105:443 (ESTABLISHED)
+Runner.Li 2088 runner  137u  IPv6  16707      0t0  TCP 10.1.0.82:34394->20.85.13
+0.105:443 (ESTABLISHED)
+Runner.Wo 2104 runner  186u  IPv6  43483      0t0  TCP 10.1.0.82:51918->140.82.1
+13.22:443 (ESTABLISHED)
+runner@runnervmeorf1:~/work/tel/tel$
+--------------------------------
+2026-04-27T11:35:25Z | ID=7 | EXIT=0
