@@ -174,3 +174,33 @@ runner@runnervmeorf1:~/work/tel/tel$ nc -vz rtmp.cdn.asset.aparat.com 443
 
 --------------------------------
 2026-04-27T09:15:39Z | ID=5 | EXIT=0
+
+🔵 EXEC ID=6 : ex ping -c 10 aparat.com
+🖥 Command: ping -c 10 aparat.com
+--------------------------------
+runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
+runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
+runner@runnervmeorf1:~/work/tel/tel$ nc -vz rtmp.cdn.asset.aparat.com 443
+cd /home/runner/work/tel/tel
+source session/env 2>/dev/null
+ping -c 10 aparat.com
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+--------------------------------
+2026-04-27T09:16:36Z | ID=6 | EXIT=0
