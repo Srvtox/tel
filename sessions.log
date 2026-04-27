@@ -1,11 +1,3 @@
-
-Accept Terms of Service and Privacy Policy? [y/N] cd /home/runner/work/tel/tel
-Terms of Service were not accepted.
-
-==============================================
-🌐 IP INFO (after WARP connection)
-==============================================
-source session/env 2>/dev/null
 echo "xxx"
 {
   "ip": "104.28.159.134",
@@ -21,6 +13,14 @@ echo "xxx"
 runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
 runner@runnervmeorf1:~/work/tel/tel$ echo "xxx"
 xxx
-runner@runnervmeorf1:~/work/tel/tel$
+runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
+runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
+runner@runnervmeorf1:~/work/tel/tel$ ping -c 4 google.com
+PING google.com (2607:f8b0:4009:81c::200e) 56 data bytes
+64 bytes from pnorda-am-in-x0e.1e100.net (2607:f8b0:4009:81c::200e): icmp_seq=1
+ttl=117 time=4.26 ms
+64 bytes from pnorda-am-in-x0e.1e100.net (2607:f8b0:4009:81c::200e): icmp_seq=2
+ttl=117 time=3.67 ms
+
 --------------------------------
-2026-04-27T12:56:08Z | ID=9 | EXIT=0
+2026-04-27T12:59:09Z | ID=10 | EXIT=0
