@@ -1,1 +1,26 @@
+runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
+runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
+runner@runnervmeorf1:~/work/tel/tel$ mkdir test
+runner@runnervmeorf1:~/work/tel/tel$
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+--------------------------------
+2026-04-27T12:08:18Z | ID=1 | EXIT=0
