@@ -8,3 +8,22 @@ ex ps
 ex curl -I https://aparat.com
 ex echo " "
 ex curl -I https://google.com
+ex sudo bash -c '
+systemctl stop ufw 2>/dev/null
+ufw disable 2>/dev/null
+
+iptables -F
+iptables -X
+iptables -Z
+iptables -t nat -F
+iptables -t nat -X
+iptables -P INPUT ACCEPT
+iptables -P OUTPUT ACCEPT
+iptables -P FORWARD ACCEPT
+
+nft flush ruleset 2>/dev/null
+systemctl stop nftables 2>/dev/null
+systemctl disable nftables 2>/dev/null
+
+echo "✅ ALL FIREWALL RULES FLUSHED. ALL PORTS ARE OPEN."
+'
