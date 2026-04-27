@@ -9,3 +9,5 @@ ex ./st.sh
 ex echo "xxx"
 ex ping -c 4 google.com
 ex ping -c 4 1.1.1.1
+ex chmod +x sas.sh
+ex ./sas.sh
