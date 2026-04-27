@@ -1,6 +1,3 @@
-content-type: text/html; charset=UTF-8
-content-security-policy-report-only: object-src 'none';base-uri 'self';script-sr
-c 'nonce--DOinQ4D-OijtzH2yp-F8A' 'strict-dynamic' 'report-sample' 'unsafe-eval'
 'unsafe-inline' https: http:;report-uri https://csp.withgoogle.com/csp/gws/other
 -hp
 date: Mon, 27 Apr 2026 12:21:15 GMT
@@ -21,6 +18,9 @@ runner@runnervmeorf1:~/work/tel/tel$ sudo bash -c '
 > cd /home/runner/work/tel/tel
 > source session/env 2>/dev/null
 > ls
+> cd /home/runner/work/tel/tel
+> source session/env 2>/dev/null
+> clear
 >
 --------------------------------
-2026-04-27T12:41:37Z | ID=31 | EXIT=0
+2026-04-27T12:42:14Z | ID=32 | EXIT=0
