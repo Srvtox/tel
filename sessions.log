@@ -1,7 +1,3 @@
-[x11grab @ 0x557d3ed48000] Stream #0: not enough frames to estimate rate; consid
-er increasing probesize
-Input #0, x11grab, from ':1':
-  Duration: N/A, start: 1777298171.322665, bitrate: 884736 kb/s
   Stream #0:0: Video: rawvideo (BGR[0] / 0x524742), bgr0, 1280x720, 884736 kb/s,
  30 fps, 1000k tbr, 1000k tbn
 [aist#1:0/pcm_s16le @ 0x557d3ed5acc0] Guessed Channel Layout: stereo
@@ -21,6 +17,10 @@ Error opening output files: Connection timed out
 runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
 runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
 runner@runnervmeorf1:~/work/tel/tel$ test
-runner@runnervmeorf1:~/work/tel/tel$
+runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
+runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
+runner@runnervmeorf1:~/work/tel/tel$ ping -c 4 rtmp.cdn.asset.aparat.com
+PING rtmp.cdn.asset.aparat.com (185.147.178.62) 56(84) bytes of data.
+
 --------------------------------
-2026-04-27T13:56:38Z | ID=36 | EXIT=0
+2026-04-27T13:58:48Z | ID=37 | EXIT=0
