@@ -24,3 +24,4 @@ ex sudo apt install nginx -y
 ex sudo systemctl enable nginx
 ex sudo systemctl start nginx
 ex systemctl status nginx
+ex clear
