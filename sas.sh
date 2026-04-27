@@ -3,7 +3,7 @@ set -e
 
 DISPLAY_NUM=:1
 LOGFILE=stream.log.txt
-RTMP_URL="rtmp://5.106.7.97/stream/69ef6cc71e16402b99d336a6takmjjwrggedgamooxbyfsmxdvhwvizj?pt=qyybesmjkbtpycattnfujdkowpqdikyh"
+RTMP_URL="rtmp://live.iranhls.com/live/toGEL85zk6pesEYol47Rg?r=75e11600-1545-448d-b4be-3baca872bc64"
 VIDEO_SIZE=1280x720
 FRAMERATE=25
 BITRATE=2500k
