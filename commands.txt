@@ -8,3 +8,4 @@ ex ufw status verbose
 ex sudo ufw status verbose
 ex sudo ufw disable
 ex sudo ufw status
+ex cloudflared tunnel --url http://localhost:8080
