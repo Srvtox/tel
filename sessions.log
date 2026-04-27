@@ -1,6 +1,3 @@
-(EE)
-اجرای XFCE4...
-/usr/bin/startxfce4: Starting X server
 
 /usr/lib/xorg/Xorg.wrap: Only console users are allowed to run the X server
 شروع FFmpeg جهت کپچر و ارسال به RTMP...
@@ -21,6 +18,9 @@ cat stream.log.txt
 cd /home/runner/work/tel/tel
 source session/env 2>/dev/null
 tt
+cd /home/runner/work/tel/tel
+source session/env 2>/dev/null
+chmod +x sas.sh
 
 --------------------------------
-2026-04-27T14:16:03Z | ID=49 | EXIT=0
+2026-04-27T14:18:25Z | ID=50 | EXIT=0
