@@ -1,26 +1,26 @@
-[out#0/flv @ 0x557d3ed583c0] Error opening output rtmp://rtmp.cdn.asset.aparat.c
-om:443/event/ef6d74868f69db63a3c11a33a8f899d8f?s=54d20ca45fba421a: Connection ti
-med out
-Error opening output file rtmp://rtmp.cdn.asset.aparat.com:443/event/ef6d74868f6
-9db63a3c11a33a8f899d8f?s=54d20ca45fba421a.
-Error opening output files: Connection timed out
-runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
-runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
-runner@runnervmeorf1:~/work/tel/tel$ test
-runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
-runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
-runner@runnervmeorf1:~/work/tel/tel$ ping -c 4 rtmp.cdn.asset.aparat.com
-PING rtmp.cdn.asset.aparat.com (185.147.178.62) 56(84) bytes of data.
+Get:1 file:/etc/apt/apt-mirrors.txt Mirrorlist [144 B]
+Hit:2 http://azure.archive.ubuntu.com/ubuntu noble InRelease
+Hit:3 http://azure.archive.ubuntu.com/ubuntu noble-updates InRelease
+Hit:4 http://azure.archive.ubuntu.com/ubuntu noble-backports InRelease
+Hit:5 http://azure.archive.ubuntu.com/ubuntu noble-security InRelease
+Hit:6 https://dl.google.com/linux/chrome-stable/deb stable InRelease
+Hit:7 https://packages.microsoft.com/repos/azure-cli noble InRelease
+Hit:8 https://pkg.cloudflareclient.com noble InRelease
+Hit:9 https://packages.microsoft.com/ubuntu/24.04/prod noble InRelease
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+37 packages can be upgraded. Run 'apt list --upgradable' to see them.
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+ffmpeg is already the newest version (7:6.1.1-3ubuntu5).
+xvfb is already the newest version (2:21.1.12-1ubuntu1.5).
+xfce4 is already the newest version (4.18).
+xfce4-terminal is already the newest version (1.1.3-1build1).
+pulseaudio is already the newest version (1:16.1+dfsg1-2ubuntu10.1).
+x11vnc is already the newest version (0.9.16-10).
+0 upgraded, 0 newly installed, 0 to remove and 37 not upgraded.
 
---- rtmp.cdn.asset.aparat.com ping statistics ---
-4 packets transmitted, 0 received, 100% packet loss, time 3100ms
-
-runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
-runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
-runner@runnervmeorf1:~/work/tel/tel$ test
-runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
-runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
-runner@runnervmeorf1:~/work/tel/tel$ chmod +x sas.sh
-runner@runnervmeorf1:~/work/tel/tel$
 --------------------------------
-2026-04-27T14:05:44Z | ID=39 | EXIT=0
+2026-04-27T14:05:47Z | ID=40 | EXIT=0
