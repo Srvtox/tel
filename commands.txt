@@ -4,3 +4,4 @@ ex cat open_ports.txt
 ex ss -tulnp > listening_ports.txt
 ex clear
 ex cat listening_ports.txt
+ex ufw status verbose
