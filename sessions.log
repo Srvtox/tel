@@ -1,26 +1,26 @@
-}runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
-runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
-runner@runnervmeorf1:~/work/tel/tel$ ss -tulnp
-Netid State  Recv-Q  Send-Q     Local Address:Port    Peer Address:Port Process
-udp   UNCONN 0       0                0.0.0.0:37398        0.0.0.0:*
-udp   UNCONN 0       0                0.0.0.0:5353         0.0.0.0:*
-udp   UNCONN 0       0              127.0.2.3:53           0.0.0.0:*
-udp   UNCONN 0       0              127.0.2.2:53           0.0.0.0:*
-udp   UNCONN 0       0             127.0.0.54:53           0.0.0.0:*
-udp   UNCONN 0       0          127.0.0.53%lo:53           0.0.0.0:*
-udp   UNCONN 0       0        10.1.0.221%eth0:68           0.0.0.0:*
-udp   UNCONN 0       0              127.0.0.1:323          0.0.0.0:*
-udp   UNCONN 0       0                   [::]:5353            [::]:*
-udp   UNCONN 0       0                   [::]:55704           [::]:*
-udp   UNCONN 0       0                  [::1]:323             [::]:*
-tcp   LISTEN 0       1024           127.0.2.3:53           0.0.0.0:*
-tcp   LISTEN 0       4096          127.0.0.54:53           0.0.0.0:*
-tcp   LISTEN 0       4096       127.0.0.53%lo:53           0.0.0.0:*
-tcp   LISTEN 0       4096           127.0.0.1:631          0.0.0.0:*
-tcp   LISTEN 0       4096             0.0.0.0:22           0.0.0.0:*
-tcp   LISTEN 0       1024           127.0.2.2:53           0.0.0.0:*
-tcp   LISTEN 0       4096                [::]:22              [::]:*
-tcp   LISTEN 0       4096               [::1]:631             [::]:*
 runner@runnervmeorf1:~/work/tel/tel$
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 --------------------------------
-2026-04-27T13:24:18Z | ID=21 | EXIT=0
+2026-04-27T13:30:37Z | ID=22 | EXIT=0
