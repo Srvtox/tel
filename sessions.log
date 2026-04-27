@@ -1,1 +1,31 @@
 
+
+🔵 EXEC ID=1 : ex lsof -i -P -n > open_ports.txt
+🖥 Command: lsof -i -P -n > open_ports.txt
+--------------------------------
+runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
+runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
+runner@runnervmeorf1:~/work/tel/tel$ lsof -i -P -n > open_ports.txt
+runner@runnervmeorf1:~/work/tel/tel$
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+--------------------------------
+2026-04-27T11:39:24Z | ID=1 | EXIT=0
