@@ -1,2 +1,3 @@
 ex mkdir test
 ex test
+ex pwd
