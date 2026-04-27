@@ -299,3 +299,33 @@ Status: inactive
 runner@runnervmeorf1:~/work/tel/tel$
 --------------------------------
 2026-04-27T11:49:55Z | ID=10 | EXIT=0
+
+🔵 EXEC ID=11 : ex cloudflared tunnel --url http://localhost:8080
+🖥 Command: cloudflared tunnel --url http://localhost:8080
+--------------------------------
+tcp   LISTEN 0      4096           0.0.0.0:22        0.0.0.0:*
+tcp   LISTEN 0      4096              [::]:22           [::]:*
+runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
+runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
+runner@runnervmeorf1:~/work/tel/tel$ ufw status verbose
+ERROR: You need to be root to run this script
+runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
+runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
+runner@runnervmeorf1:~/work/tel/tel$ sudo ufw status verbose
+Status: inactive
+runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
+runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
+runner@runnervmeorf1:~/work/tel/tel$ sudo ufw disable
+Firewall stopped and disabled on system startup
+runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
+runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
+runner@runnervmeorf1:~/work/tel/tel$ sudo ufw status
+Status: inactive
+runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
+runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
+runner@runnervmeorf1:~/work/tel/tel$ cloudflared tunnel --url http://localhost:8
+080
+cloudflared: command not found
+runner@runnervmeorf1:~/work/tel/tel$
+--------------------------------
+2026-04-27T11:53:57Z | ID=11 | EXIT=0
