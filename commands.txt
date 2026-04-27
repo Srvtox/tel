@@ -1,1 +1,1 @@
-ex cd /
+ex mkdir test
