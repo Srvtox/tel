@@ -28,3 +28,4 @@ ex clear
 ex curl -s https://ipinfo.io/ip
 ex : q
 ex q
+ex curl -s https://ipinfo.io/ip
