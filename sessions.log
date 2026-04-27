@@ -11,16 +11,16 @@ runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
 runner@runnervmeorf1:~/work/tel/tel$ ping -c 4 1.1.1.1
 PING 1.1.1.1 (1.1.1.1) 56(84) bytes of data.
 
+--- 1.1.1.1 ping statistics ---
+4 packets transmitted, 0 received, 100% packet loss, time 3086ms
 
-
-
-
-
-
-
+runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
+runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
+runner@runnervmeorf1:~/work/tel/tel$ ping -c 4 aparat.com
+PING aparat.com (185.147.179.11) 56(84) bytes of data.
 
 
 
 
 --------------------------------
-2026-04-27T12:13:13Z | ID=5 | EXIT=0
+2026-04-27T12:14:31Z | ID=6 | EXIT=0
