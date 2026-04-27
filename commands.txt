@@ -18,3 +18,4 @@ ex ./sas.sh
 ex test
 ex test
 ex curl -s https://ipinfo.io
+ex ss -tulnp
