@@ -1,6 +1,3 @@
-runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
-runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
-runner@runnervmeorf1:~/work/tel/tel$ echo " "
 
 runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
 runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
@@ -21,6 +18,9 @@ x-xss-protection: 0
 x-frame-options: SAMEORIGIN
 alt-svc: h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
 
-runner@runnervmeorf1:~/work/tel/tel$
+runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
+runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
+runner@runnervmeorf1:~/work/tel/tel$ sudo bash -c '
+>
 --------------------------------
-2026-04-27T12:21:15Z | ID=10 | EXIT=0
+2026-04-27T12:37:04Z | ID=11 | EXIT=0
