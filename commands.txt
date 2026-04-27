@@ -51,3 +51,4 @@ ex chmod +x sas.sh
 ex ./sas.sh
 ex test
 ex tail -n 100 stream.log.txt
+ex ls
