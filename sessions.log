@@ -149,3 +149,33 @@ runner@runnervmeorf1:~/work/tel/tel$
 
 --------------------------------
 2026-04-27T11:43:51Z | ID=5 | EXIT=0
+
+🔵 EXEC ID=6 : ex cat listening_ports.txt
+🖥 Command: cat listening_ports.txt
+--------------------------------
+runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
+runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
+runner@runnervmeorf1:~/work/tel/tel$ cat listening_ports.txt
+Netid State  Recv-Q Send-Q   Local Address:Port Peer Address:PortProcess
+udp   UNCONN 0      0           127.0.0.54:53        0.0.0.0:*
+udp   UNCONN 0      0        127.0.0.53%lo:53        0.0.0.0:*
+udp   UNCONN 0      0      10.1.1.121%eth0:68        0.0.0.0:*
+udp   UNCONN 0      0            127.0.0.1:323       0.0.0.0:*
+udp   UNCONN 0      0                [::1]:323          [::]:*
+tcp   LISTEN 0      4096        127.0.0.54:53        0.0.0.0:*
+tcp   LISTEN 0      4096     127.0.0.53%lo:53        0.0.0.0:*
+tcp   LISTEN 0      4096           0.0.0.0:22        0.0.0.0:*
+tcp   LISTEN 0      4096              [::]:22           [::]:*
+runner@runnervmeorf1:~/work/tel/tel$
+
+
+
+
+
+
+
+
+
+
+--------------------------------
+2026-04-27T11:44:47Z | ID=6 | EXIT=0
