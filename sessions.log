@@ -1,26 +1,26 @@
-PING aparat.com (185.147.179.11) 56(84) bytes of data.
-
---- aparat.com ping statistics ---
-4 packets transmitted, 0 received, 100% packet loss, time 3090ms
-
-runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
-runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
-runner@runnervmeorf1:~/work/tel/tel$ ps
-    PID TTY          TIME CMD
-   2862 pts/0    00:00:00 bash
-   3578 pts/0    00:00:00 ps
-runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
-runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
-runner@runnervmeorf1:~/work/tel/tel$ curl -I https://aparat.com
-HTTP/2 504
-cache-control: no-cache
-content-type: text/html
-x-rr-pop: sg-sin-dc1
-
 runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
 runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
 runner@runnervmeorf1:~/work/tel/tel$ echo " "
 
+runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
+runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
+runner@runnervmeorf1:~/work/tel/tel$ curl -I https://google.com
+HTTP/2 301
+location: https://www.google.com/
+content-type: text/html; charset=UTF-8
+content-security-policy-report-only: object-src 'none';base-uri 'self';script-sr
+c 'nonce--DOinQ4D-OijtzH2yp-F8A' 'strict-dynamic' 'report-sample' 'unsafe-eval'
+'unsafe-inline' https: http:;report-uri https://csp.withgoogle.com/csp/gws/other
+-hp
+date: Mon, 27 Apr 2026 12:21:15 GMT
+expires: Wed, 27 May 2026 12:21:15 GMT
+cache-control: public, max-age=2592000
+server: gws
+content-length: 220
+x-xss-protection: 0
+x-frame-options: SAMEORIGIN
+alt-svc: h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
+
 runner@runnervmeorf1:~/work/tel/tel$
 --------------------------------
-2026-04-27T12:19:26Z | ID=9 | EXIT=0
+2026-04-27T12:21:15Z | ID=10 | EXIT=0
