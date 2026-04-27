@@ -30,3 +30,4 @@ ex : q
 ex q
 ex curl -s https://ipinfo.io/ip
 ex curl -I http://104.28.159.134
+ex test
