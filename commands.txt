@@ -19,3 +19,7 @@ ex test
 ex test
 ex curl -s https://ipinfo.io
 ex ss -tulnp
+ex clear
+ex sudo apt install nginx -y
+ex sudo systemctl enable nginx
+ex sudo systemctl start nginx
