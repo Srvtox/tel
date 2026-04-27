@@ -1,16 +1,3 @@
-
-(evolution-alarm-notify:20079): dbind-WARNING **: 13:14:44.566: AT-SPI: Error re
-trieving accessibility bus address: org.freedesktop.DBus.Error.ServiceUnknown: T
-he name org.a11y.Bus was not provided by any .service files
-
-(nm-applet:20129): dbind-WARNING **: 13:14:44.590: AT-SPI: Error retrieving acce
-ssibility bus address: org.freedesktop.DBus.Error.ServiceUnknown: The name org.a
-11y.Bus was not provided by any .service files
-Process already running (98:Address already in use). Exiting.
-
-(xfce4-notifyd:20081): dbind-WARNING **: 13:14:44.619: AT-SPI: Error retrieving
-accessibility bus address: org.freedesktop.DBus.Error.ServiceUnknown: The name o
-rg.a11y.Bus was not provided by any .service files
 Another notification daemon is running, exiting
 
 (nm-applet:20129): Gtk-WARNING **: 13:14:44.694: Can't set a parent on widget wh
@@ -21,6 +8,19 @@ runner@runnervmeorf1:~/work/tel/tel$ test
 runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
 runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
 runner@runnervmeorf1:~/work/tel/tel$ test
-runner@runnervmeorf1:~/work/tel/tel$
+runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
+runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
+runner@runnervmeorf1:~/work/tel/tel$ curl -s https://ipinfo.io
+{
+  "ip": "104.28.159.134",
+  "city": "Wheaton",
+  "region": "Illinois",
+  "country": "US",
+  "loc": "41.8661,-88.1070",
+  "org": "AS13335 Cloudflare, Inc.",
+  "postal": "60187",
+  "timezone": "America/Chicago",
+  "readme": "https://ipinfo.io/missingauth"
+}runner@runnervmeorf1:~/work/tel/tel$
 --------------------------------
-2026-04-27T13:15:59Z | ID=19 | EXIT=0
+2026-04-27T13:22:08Z | ID=20 | EXIT=0
