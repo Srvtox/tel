@@ -1,1 +1,2 @@
 ex lsof -i -P -n > open_ports.txt
+ex ls -al
