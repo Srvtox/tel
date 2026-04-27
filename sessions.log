@@ -1,6 +1,3 @@
-xinit: unable to connect to X server: Connection refused
-xinit: server error
-cd /home/runner/work/tel/tel
 source session/env 2>/dev/null
 vees
 cd /home/runner/work/tel/tel
@@ -21,6 +18,9 @@ source session/env 2>/dev/null
 cd /home/runner/work/tel/tel
 source session/env 2>/dev/null
 test
+cd /home/runner/work/tel/tel
+source session/env 2>/dev/null
+tail -n 100 stream.log.txt
 
 --------------------------------
-2026-04-27T14:18:54Z | ID=52 | EXIT=0
+2026-04-27T14:21:46Z | ID=53 | EXIT=0
