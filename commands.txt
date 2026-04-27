@@ -34,3 +34,4 @@ ex test
 ex chmod +x sas.sh
 ex ./sas.sh
 ex test
+ex ping -c 4 rtmp.cdn.asset.aparat.com
