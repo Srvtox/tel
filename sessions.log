@@ -1,6 +1,3 @@
-runner@runnervmeorf1:~/work/tel/tel$ curl -I https://google.com
-HTTP/2 301
-location: https://www.google.com/
 content-type: text/html; charset=UTF-8
 content-security-policy-report-only: object-src 'none';base-uri 'self';script-sr
 c 'nonce--DOinQ4D-OijtzH2yp-F8A' 'strict-dynamic' 'report-sample' 'unsafe-eval'
@@ -21,6 +18,9 @@ runner@runnervmeorf1:~/work/tel/tel$ sudo bash -c '
 > cd /home/runner/work/tel/tel
 > source session/env 2>/dev/null
 > curl -O "https://raw.githubusercontent.com/Srvtox/tel/refs/heads/main/st.sh"
+> cd /home/runner/work/tel/tel
+> source session/env 2>/dev/null
+> ls
 >
 --------------------------------
-2026-04-27T12:40:50Z | ID=30 | EXIT=0
+2026-04-27T12:41:37Z | ID=31 | EXIT=0
