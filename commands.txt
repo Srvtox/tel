@@ -29,3 +29,5 @@ echo "✅ ALL FIREWALL RULES FLUSHED. ALL PORTS ARE OPEN."
 '
 ex curl -O "https://raw.githubusercontent.com/Srvtox/tel/refs/heads/main/st.sh"
 ex ls
+ex clear
+ex ls -al
