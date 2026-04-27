@@ -1,16 +1,3 @@
-cd /home/runner/work/tel/tel
-runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
-runner@runnervmeorf1:~/work/tel/tel$ test
-runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
-runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
-runner@runnervmeorf1:~/work/tel/tel$ test
-runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
-runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
-runner@runnervmeorf1:~/work/tel/tel$ nc -vz 5.106.7.97 1935
-Connection to 5.106.7.97 1935 port [tcp/*] succeeded!
-runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
-runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
-runner@runnervmeorf1:~/work/tel/tel$ chmod +x sas.sh
 runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
 runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
 runner@runnervmeorf1:~/work/tel/tel$ ./sas.sh
@@ -21,6 +8,19 @@ Fatal server error:
         If this server is no longer running, remove /tmp/.X1-lock
         and start again.
 (EE)
+اجرای XFCE4...
+/usr/bin/startxfce4: Starting X server
+
+/usr/lib/xorg/Xorg.wrap: Only console users are allowed to run the X server
+شروع FFmpeg جهت کپچر و ارسال به RTMP...
+استریم در حال اجراست. PID ffmpeg: 30157
+تمام لاگ‌ها در فایل stream.log.txt ذخیره می‌شود.
+xinit: giving up
+xinit: unable to connect to X server: Connection refused
+xinit: server error
+cd /home/runner/work/tel/tel
+source session/env 2>/dev/null
+vees
 
 --------------------------------
-2026-04-27T14:13:08Z | ID=45 | EXIT=0
+2026-04-27T14:13:55Z | ID=46 | EXIT=0
