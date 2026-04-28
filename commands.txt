@@ -5,3 +5,4 @@ ex clear
 ex apt install nginx
 ex sudo systemctl start nginx
 ex sudo systemctl enable nginx
+ex curl ifconfig.me
