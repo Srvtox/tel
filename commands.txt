@@ -3,3 +3,4 @@ ex ./sas.sh
 ex clear
 ex clear
 ex apt install nginx
+ex sudo systemctl start nginx
