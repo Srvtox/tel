@@ -1,4 +1,4 @@
-name: Remote Shell 10.0 ULTRA OPS
+name: Remote Shell 10.1 ULTRA OPS REALTIME
 
 on:
   workflow_dispatch:
@@ -56,7 +56,7 @@ jobs:
         shell: bash
         run: |
 
-          echo "🚀 Remote Shell 10 ULTRA OPS Started"
+          echo "🚀 Remote Shell 10 ULTRA OPS (REALTIME PATCH) Started"
 
           set -e
 
@@ -66,19 +66,29 @@ jobs:
             tmux new-session -d -s $SESSION
           fi
 
+          # 🔴 REALTIME STREAM: خروجی tmux زنده میره تو لاگ
+          tmux pipe-pane -t $SESSION -o "cat >> sessions.log"
+
+          ITER=0
+
           while true; do
 
-            git fetch origin || true
+            ITER=$((ITER+1))
 
-            LOCAL=$(git rev-parse HEAD)
-            REMOTE=$(git rev-parse origin/main)
+            # 🧠 git fetch فقط هر ~۵ ثانیه
+            if [ $((ITER % 25)) -eq 0 ]; then
+              git fetch origin || true
 
-            NOW=$(date +%s)
-            LAST_RESET=$(cat .last_reset)
+              LOCAL=$(git rev-parse HEAD)
+              REMOTE=$(git rev-parse origin/main)
 
-            if [ "$LOCAL" != "$REMOTE" ] && [ $((NOW-LAST_RESET)) -gt 5 ]; then
-              echo "$NOW" > .last_reset
-              git reset --hard origin/main
+              NOW=$(date +%s)
+              LAST_RESET=$(cat .last_reset)
+
+              if [ "$LOCAL" != "$REMOTE" ] && [ $((NOW-LAST_RESET)) -gt 5 ]; then
+                echo "$NOW" > .last_reset
+                git reset --hard origin/main
+              fi
             fi
 
             LAST_ID=$(cat .rshell_state)
@@ -91,26 +101,17 @@ jobs:
               ID=$COUNT
 
               [[ -z "$line" || "$line" =~ ^# ]] && continue
-
-              if [ "$ID" -le "$LAST_ID" ]; then
-                continue
-              fi
+              if [ "$ID" -le "$LAST_ID" ]; then continue; fi
 
               NEWFOUND=1
               TS=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
-              # 🧹 اینجا لاگ قبلی رو پاک می‌کنیم تا فقط خروجی دستور جاری بمونه
+              # لاگ ریست میشه (طبق نسخه اصلی)
               > sessions.log
-
-              echo "" | tee -a sessions.log
               echo "🔵 EXEC ID=$ID : $line" | tee -a sessions.log
 
-              # -------------------
-              # EXPORT ENV
-              # -------------------
-
+              # ---------- EXPORT ENV ----------
               if [[ "$line" =~ ^export[[:space:]] ]]; then
-
                 VAR=$(echo "$line" | sed -E 's/export[[:space:]]+([A-Za-z_][A-Za-z0-9_]*)=.*/\1/')
                 grep -v "^export $VAR=" session/env > env.tmp || true
                 echo "$line" >> env.tmp
@@ -122,7 +123,6 @@ jobs:
                 git add -f session/env .rshell_state sessions.log
                 git commit -m "env update $ID [skip ci]" || true
                 git push || true
-
                 continue
               fi
 
@@ -131,7 +131,6 @@ jobs:
               if [[ "$line" =~ ^ex[[:space:]] ]]; then
 
                 cmd="${line#ex }"
-
                 cd "$(cat session/cwd)"
 
                 echo "🖥 Command: $cmd" | tee -a sessions.log
@@ -140,36 +139,18 @@ jobs:
                 SAFE_CMD="$cmd"
 
                 if [[ "$SAFE_CMD" =~ ^cd[[:space:]] ]]; then
-
                   TARGET="${SAFE_CMD#cd }"
-
                   cd "$TARGET" 2>/dev/null
                   pwd > session/cwd
-
                   echo "📂 Directory changed to $(cat session/cwd)" | tee -a sessions.log
                   EXIT=0
-
                 else
 
-                  if [[ "$SAFE_CMD" =~ apt[[:space:]]+install ]]; then
-                    SAFE_CMD="sudo DEBIAN_FRONTEND=noninteractive $SAFE_CMD -y"
-                  fi
-
-                  if [[ "$SAFE_CMD" =~ apt[[:space:]]+update ]]; then
-                    SAFE_CMD="sudo $SAFE_CMD"
-                  fi
-
-                  if [[ "$SAFE_CMD" =~ apt[[:space:]]+upgrade ]]; then
-                    SAFE_CMD="sudo DEBIAN_FRONTEND=noninteractive $SAFE_CMD -y"
-                  fi
-
-                  if [[ "$SAFE_CMD" =~ pip[[:space:]]+install ]]; then
-                    SAFE_CMD="pip install --break-system-packages ${SAFE_CMD#pip install }"
-                  fi
-
-                  if [[ "$SAFE_CMD" =~ npm[[:space:]]+install ]]; then
-                    SAFE_CMD="$SAFE_CMD --yes"
-                  fi
+                  [[ "$SAFE_CMD" =~ apt[[:space:]]+install ]] && SAFE_CMD="sudo DEBIAN_FRONTEND=noninteractive $SAFE_CMD -y"
+                  [[ "$SAFE_CMD" =~ apt[[:space:]]+update ]] && SAFE_CMD="sudo $SAFE_CMD"
+                  [[ "$SAFE_CMD" =~ apt[[:space:]]+upgrade ]] && SAFE_CMD="sudo DEBIAN_FRONTEND=noninteractive $SAFE_CMD -y"
+                  [[ "$SAFE_CMD" =~ pip[[:space:]]+install ]] && SAFE_CMD="pip install --break-system-packages ${SAFE_CMD#pip install }"
+                  [[ "$SAFE_CMD" =~ npm[[:space:]]+install ]] && SAFE_CMD="$SAFE_CMD --yes"
 
                   if [[ "$SAFE_CMD" =~ ^bg[[:space:]] ]]; then
                     SAFE_CMD="${SAFE_CMD#bg }"
@@ -177,36 +158,27 @@ jobs:
                     echo "🟢 Started background process" | tee -a sessions.log
                     EXIT=0
                   else
-
-                    # -------- INTERACTIVE EXECUTION --------
                     tmux send-keys -t $SESSION "cd $(cat session/cwd)" Enter
                     tmux send-keys -t $SESSION "source session/env 2>/dev/null" Enter
                     tmux send-keys -t $SESSION "$SAFE_CMD" Enter
 
-                    sleep 2
-
-                    # این قسمت رو به بازنویسی خروجی تغییر دادیم!
-                    tmux capture-pane -pt $SESSION > sessions.log
-
+                    # ⏱ خیلی کوتاه، چون pipe-pane زنده است
+                    sleep 0.3
+                    tmux capture-pane -pt $SESSION >> sessions.log
                     EXIT=0
                   fi
-
                 fi
 
                 echo "--------------------------------" | tee -a sessions.log
 
               else
-
-                # اینجا بدون append ذخیره می‌کنیم لاگ رو
                 bash -lc "source session/env && $line" 2>&1 | tee sessions.log
                 EXIT=${PIPESTATUS[0]}
-
               fi
 
               set -e
 
               echo "$TS | ID=$ID | EXIT=$EXIT" | tee -a sessions.log
-
               echo "$ID" > .rshell_state
 
               git add -f sessions.log .rshell_state session/env session/cwd
@@ -215,40 +187,29 @@ jobs:
 
             done < commands.txt
 
-            # -------- INPUT INJECTION --------
-
+            # ---------- INPUT INJECTION (REALTIME) ----------
             if [ -f input.txt ]; then
-
               CUR_HASH=$(md5sum input.txt | awk '{print $1}')
               OLD_HASH=$(cat .last_input 2>/dev/null || echo "")
 
               if [ "$CUR_HASH" != "$OLD_HASH" ]; then
-
                 LAST_INPUT=$(tail -n 1 input.txt)
-
-                # اینجا هم فایل لاگ رو از قبل خالی کن تا فقط این دستور داخل لاگ باشه
                 > sessions.log
-
                 echo "📥 Injecting input: $LAST_INPUT" | tee -a sessions.log
-
                 tmux send-keys -t $SESSION "$LAST_INPUT" Enter
-
                 echo "$CUR_HASH" > .last_input
-
                 tmux capture-pane -pt $SESSION >> sessions.log
-
                 git add sessions.log .last_input
                 git commit -m "input injected [skip ci]" || true
                 git push || true
-
               fi
             fi
 
+            # ⚡ ULTRA FAST LOOP
             if [ "$NEWFOUND" -eq 0 ]; then
-              echo "⏳ idle..."
-              sleep 10
+              sleep 0.3
             else
-              sleep 2
+              sleep 0.15
             fi
 
           done
