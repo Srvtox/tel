@@ -1,11 +1,3 @@
-Unpacking nginx-common (1.24.0-2ubuntu7.7) over (1.24.0-2ubuntu7.6) ...
-Setting up nginx-common (1.24.0-2ubuntu7.7) ...
-nginx.service is a disabled or a static unit not running, not starting it.
-Setting up nginx (1.24.0-2ubuntu7.7) ...
-Processing triggers for man-db (2.12.0-4build2) ...
-Not building database; man-db/auto-update is not 'true'.
-Processing triggers for ufw (0.36.2-6) ...
-Scanning processes...
 Scanning candidates...
 Scanning linux images...
 
@@ -21,6 +13,14 @@ No VM guests are running outdated hypervisor (qemu) binaries on this host.
 runner@runnervmhkfpo:~/work/tel/tel$ cd /home/runner/work/tel/tel
 runner@runnervmhkfpo:~/work/tel/tel$ source session/env 2>/dev/null
 runner@runnervmhkfpo:~/work/tel/tel$ sudo systemctl start nginx
+runner@runnervmhkfpo:~/work/tel/tel$ cd /home/runner/work/tel/tel
+runner@runnervmhkfpo:~/work/tel/tel$ source session/env 2>/dev/null
+runner@runnervmhkfpo:~/work/tel/tel$ sudo systemctl enable nginx
+Synchronizing state of nginx.service with SysV service script with /usr/lib/syst
+emd/systemd-sysv-install.
+Executing: /usr/lib/systemd/systemd-sysv-install enable nginx
+Created symlink /etc/systemd/system/multi-user.target.wants/nginx.service → /usr
+/lib/systemd/system/nginx.service.
 runner@runnervmhkfpo:~/work/tel/tel$
 --------------------------------
-2026-04-28T17:43:23Z | ID=6 | EXIT=0
+2026-04-28T17:44:20Z | ID=7 | EXIT=0
