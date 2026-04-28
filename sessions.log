@@ -1,26 +1,26 @@
-source session/env 2>/dev/null
-tt
-cd /home/runner/work/tel/tel
-source session/env 2>/dev/null
-chmod +x sas.sh
-cd /home/runner/work/tel/tel
-source session/env 2>/dev/null
-./sas.sh
-cd /home/runner/work/tel/tel
-source session/env 2>/dev/null
-test
-cd /home/runner/work/tel/tel
-source session/env 2>/dev/null
-tail -n 100 stream.log.txt
-cd /home/runner/work/tel/tel
-source session/env 2>/dev/null
-ls
-cd /home/runner/work/tel/tel
-source session/env 2>/dev/null
-curl -O "https://raw.githubusercontent.com/Srvtox/tel/refs/heads/main/st.sh"
-cd /home/runner/work/tel/tel
-source session/env 2>/dev/null
-ls
+runner@runnervmhkfpo:~/work/tel/tel$
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 --------------------------------
-2026-04-27T14:35:31Z | ID=3 | EXIT=0
+2026-04-28T17:40:29Z | ID=4 | EXIT=0
