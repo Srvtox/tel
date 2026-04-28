@@ -7,3 +7,5 @@ ex sudo systemctl start nginx
 ex sudo systemctl enable nginx
 ex curl ifconfig.me
 ex ngrok tcp 22
+ex snap install ngrok
+ex ngrok tcp 22
