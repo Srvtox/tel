@@ -2,3 +2,4 @@ ex chmod +x sas.sh
 ex ./sas.sh
 ex clear
 ex clear
+ex apt install nginx
