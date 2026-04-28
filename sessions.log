@@ -1,7 +1,3 @@
-No user sessions are running outdated binaries.
-
-No VM guests are running outdated hypervisor (qemu) binaries on this host.
-runner@runnervmhkfpo:~/work/tel/tel$ cd /home/runner/work/tel/tel
 runner@runnervmhkfpo:~/work/tel/tel$ source session/env 2>/dev/null
 runner@runnervmhkfpo:~/work/tel/tel$ sudo systemctl start nginx
 runner@runnervmhkfpo:~/work/tel/tel$ cd /home/runner/work/tel/tel
@@ -21,6 +17,10 @@ runner@runnervmhkfpo:~/work/tel/tel$ ngrok tcp 22
 Command 'ngrok' not found, but can be installed with:
 snap install ngrok
 Please ask your administrator.
+runner@runnervmhkfpo:~/work/tel/tel$ cd /home/runner/work/tel/tel
+runner@runnervmhkfpo:~/work/tel/tel$ source session/env 2>/dev/null
+runner@runnervmhkfpo:~/work/tel/tel$ snap install ngrok
+error: access denied (try with sudo)
 runner@runnervmhkfpo:~/work/tel/tel$
 --------------------------------
-2026-04-28T17:50:09Z | ID=9 | EXIT=0
+2026-04-28T17:50:55Z | ID=10 | EXIT=0
