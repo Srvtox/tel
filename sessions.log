@@ -1,9 +1,3 @@
-runner@runnervmhkfpo:~/work/tel/tel$ source session/env 2>/dev/null
-runner@runnervmhkfpo:~/work/tel/tel$ sudo systemctl start nginx
-runner@runnervmhkfpo:~/work/tel/tel$ cd /home/runner/work/tel/tel
-runner@runnervmhkfpo:~/work/tel/tel$ source session/env 2>/dev/null
-runner@runnervmhkfpo:~/work/tel/tel$ sudo systemctl enable nginx
-Synchronizing state of nginx.service with SysV service script with /usr/lib/syst
 emd/systemd-sysv-install.
 Executing: /usr/lib/systemd/systemd-sysv-install enable nginx
 Created symlink /etc/systemd/system/multi-user.target.wants/nginx.service → /usr
@@ -21,6 +15,12 @@ runner@runnervmhkfpo:~/work/tel/tel$ cd /home/runner/work/tel/tel
 runner@runnervmhkfpo:~/work/tel/tel$ source session/env 2>/dev/null
 runner@runnervmhkfpo:~/work/tel/tel$ snap install ngrok
 error: access denied (try with sudo)
+runner@runnervmhkfpo:~/work/tel/tel$ cd /home/runner/work/tel/tel
+runner@runnervmhkfpo:~/work/tel/tel$ source session/env 2>/dev/null
+runner@runnervmhkfpo:~/work/tel/tel$ ngrok tcp 22
+Command 'ngrok' not found, but can be installed with:
+snap install ngrok
+Please ask your administrator.
 runner@runnervmhkfpo:~/work/tel/tel$
 --------------------------------
-2026-04-28T17:50:55Z | ID=10 | EXIT=0
+2026-04-28T17:50:57Z | ID=11 | EXIT=0
