@@ -1,6 +1,3 @@
-Scanning candidates...
-Scanning linux images...
-
 Running kernel seems to be up-to-date.
 
 No services need to be restarted.
@@ -21,6 +18,9 @@ emd/systemd-sysv-install.
 Executing: /usr/lib/systemd/systemd-sysv-install enable nginx
 Created symlink /etc/systemd/system/multi-user.target.wants/nginx.service → /usr
 /lib/systemd/system/nginx.service.
-runner@runnervmhkfpo:~/work/tel/tel$
+runner@runnervmhkfpo:~/work/tel/tel$ cd /home/runner/work/tel/tel
+runner@runnervmhkfpo:~/work/tel/tel$ source session/env 2>/dev/null
+runner@runnervmhkfpo:~/work/tel/tel$ curl ifconfig.me
+130.131.71.18runner@runnervmhkfpo:~/work/tel/tel$
 --------------------------------
-2026-04-28T17:44:20Z | ID=7 | EXIT=0
+2026-04-28T17:46:49Z | ID=8 | EXIT=0
