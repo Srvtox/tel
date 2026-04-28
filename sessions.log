@@ -1,26 +1,26 @@
-The following additional packages will be installed:
-  nginx-common
-Suggested packages:
-  fcgiwrap nginx-doc
-The following packages will be upgraded:
-  nginx nginx-common
-2 upgraded, 0 newly installed, 0 to remove and 8 not upgraded.
-Need to get 566 kB of archives.
-After this operation, 0 B of additional disk space will be used.
-Get:1 file:/etc/apt/apt-mirrors.txt Mirrorlist [144 B]
-Get:2 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 nginx amd6
-4 1.24.0-2ubuntu7.7 [522 kB]
-Get:3 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 nginx-comm
-on all 1.24.0-2ubuntu7.7 [43.8 kB]
-Fetched 566 kB in 0s (7003 kB/s)
-Preconfiguring packages ...
-(Reading database ... 221917 files and directories currently installed.)
-Preparing to unpack .../nginx_1.24.0-2ubuntu7.7_amd64.deb ...
-Unpacking nginx (1.24.0-2ubuntu7.7) over (1.24.0-2ubuntu7.6) ...
-Preparing to unpack .../nginx-common_1.24.0-2ubuntu7.7_all.deb ...
 Unpacking nginx-common (1.24.0-2ubuntu7.7) over (1.24.0-2ubuntu7.6) ...
 Setting up nginx-common (1.24.0-2ubuntu7.7) ...
+nginx.service is a disabled or a static unit not running, not starting it.
+Setting up nginx (1.24.0-2ubuntu7.7) ...
+Processing triggers for man-db (2.12.0-4build2) ...
+Not building database; man-db/auto-update is not 'true'.
+Processing triggers for ufw (0.36.2-6) ...
+Scanning processes...
+Scanning candidates...
+Scanning linux images...
 
-Progress: [ 56%] [################################..........................]
+Running kernel seems to be up-to-date.
+
+No services need to be restarted.
+
+No containers need to be restarted.
+
+No user sessions are running outdated binaries.
+
+No VM guests are running outdated hypervisor (qemu) binaries on this host.
+runner@runnervmhkfpo:~/work/tel/tel$ cd /home/runner/work/tel/tel
+runner@runnervmhkfpo:~/work/tel/tel$ source session/env 2>/dev/null
+runner@runnervmhkfpo:~/work/tel/tel$ sudo systemctl start nginx
+runner@runnervmhkfpo:~/work/tel/tel$
 --------------------------------
-2026-04-28T17:41:36Z | ID=5 | EXIT=0
+2026-04-28T17:43:23Z | ID=6 | EXIT=0
