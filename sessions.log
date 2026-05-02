@@ -1,13 +1,6 @@
-🔵 EXEC ID=10 : ex ssh yEgn7MXyuAM4ZvMRqyKP224wP@sfo2.tmate.io
-🖥 Command: ssh yEgn7MXyuAM4ZvMRqyKP224wP@sfo2.tmate.io
+🔵 EXEC ID=11 : ex test
+🖥 Command: test
 --------------------------------
-TriggeredBy: ● ssh.socket
-       Docs: man:sshd(8)
-             man:sshd_config(5)
-    Process: 36593 ExecStartPre=/usr/sbin/sshd -t (code=exited, status=0/SUCCES>
-   Main PID: 36595 (sshd)
-      Tasks: 1 (limit: 19151)
-     Memory: 2.3M (peak: 2.7M)
         CPU: 15ms
      CGroup: /system.slice/ssh.service
              └─36595 "sshd: /usr/sbin/sshd -D [listener] 0 of 10-100 startups"
@@ -24,6 +17,13 @@ May 02 08:30:30 runnervmeorf1 systemd[1]: Started ssh.service - OpenBSD Secure >
 runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
 runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
 runner@runnervmeorf1:~/work/tel/tel$ ssh yEgn7MXyuAM4ZvMRqyKP224wP@sfo2.tmate.io
-
+The authenticity of host 'sfo2.tmate.io (157.230.72.130)' can't be established.
+RSA key fingerprint is SHA256:Hthk2T/M/Ivqfk1YYUn5ijC2Att3+UPzD7Rn72P5VWs.
+This key is not known by any other names.
+Are you sure you want to continue connecting (yes/no/[fingerprint])? cd /home/ru
+nner/work/tel/tel
+Please type 'yes', 'no' or the fingerprint: source session/env 2>/dev/null
+Please type 'yes', 'no' or the fingerprint: test
+Please type 'yes', 'no' or the fingerprint:
 --------------------------------
-2026-05-02T08:38:06Z | ID=10 | EXIT=0
+2026-05-02T08:38:39Z | ID=11 | EXIT=0
