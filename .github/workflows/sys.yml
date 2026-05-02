@@ -1,4 +1,4 @@
-name: Remote Shell 12.1 TRUE REALTIME FIXED
+name: Remote Shell 12.2 TRUE REALTIME WITH AUTO-PULL
 
 on:
   workflow_dispatch:
@@ -24,8 +24,8 @@ jobs:
           sudo apt-get install -y expect util-linux
 
           mkdir -p session
-          : > commands.txt
           : > sessions.log
+          : > commands.txt
           echo 0 > .rshell_state
           echo "# env" > session/env
           pwd > session/cwd
@@ -34,13 +34,18 @@ jobs:
         shell: bash
         run: |
           set -Eeuo pipefail
-          echo "🔥 Remote Shell 12.1 TRUE REALTIME FIXED Started"
+          echo "🔥 Remote Shell 12.2 TRUE REALTIME WITH AUTO-PULL Started"
 
           while true; do
+
+            # ********** THE MAGIC FIX **********
+            git fetch --all
+            git reset --hard origin/main
+            # ************************************
+
             last_id=$(cat .rshell_state)
             current_id=0
 
-            # مانیتور کردن فایل commands.txt — مهم!
             mapfile -t lines < commands.txt || true
             line_count="${#lines[@]}"
 
@@ -52,7 +57,6 @@ jobs:
             for line in "${lines[@]}"; do
               current_id=$((current_id+1))
 
-              # skip processed
               if (( current_id <= last_id )); then
                 continue
               fi
@@ -67,12 +71,8 @@ jobs:
               echo "🔵 EXEC $current_id :: '$clean_line'"
               echo "────────────────────────────────────────────"
 
-              # reset log
-              : > sessions.log
-
               SAFE_CMD="$clean_line"
 
-              # handle EXPORT
               if [[ "$SAFE_CMD" =~ ^export[[:space:]]+ ]]; then
                 var=$(echo "$SAFE_CMD" | sed -E 's/export[[:space:]]+([A-Za-z_][A-Za-z0-9_]*).*/\1/')
                 grep -v "^export $var=" session/env > env.tmp || true
@@ -81,7 +81,6 @@ jobs:
                 echo "Env updated."
                 exit_code=0
 
-              # handle CD
               elif [[ "$SAFE_CMD" =~ ^cd[[:space:]]+ ]]; then
                 target="${SAFE_CMD#cd }"
                 if cd "$target" 2>/dev/null; then
@@ -93,11 +92,9 @@ jobs:
                   exit_code=1
                 fi
 
-              # EXECUTE REAL COMMAND INSIDE TRUE PTY
               elif [[ "$SAFE_CMD" =~ ^ex[[:space:]]+ ]]; then
                 realcmd="${SAFE_CMD#ex }"
 
-                # safety apt transforms
                 if [[ "$realcmd" =~ ^apt[[:space:]]+install ]]; then
                   realcmd="sudo DEBIAN_FRONTEND=noninteractive apt-get install -y ${realcmd#apt install }"
                 elif [[ "$realcmd" =~ ^apt[[:space:]]+update ]]; then
@@ -106,14 +103,10 @@ jobs:
                   realcmd="sudo DEBIAN_FRONTEND=noninteractive apt-get upgrade -y"
                 fi
 
-                echo "▶ Running command: $realcmd"
-
-                # MAGIC REALTIME PTY EXECUTION
                 script -q -c "cd \"$(cat session/cwd)\"; source session/env 2>/dev/null; $realcmd" /dev/null \
                     | tee -a sessions.log
                 exit_code=${PIPESTATUS[0]}
 
-              # NORMAL COMMANDS
               else
                 script -q -c "cd \"$(cat session/cwd)\"; source session/env 2>/dev/null; $SAFE_CMD" /dev/null \
                     | tee -a sessions.log
@@ -124,6 +117,7 @@ jobs:
               echo "$ts | ID=$current_id | EXIT=$exit_code"
 
               echo "$current_id" > .rshell_state
+
               git add sessions.log .rshell_state session/env session/cwd
               git commit -m "exec $current_id [skip ci]" || true
               git push || true
