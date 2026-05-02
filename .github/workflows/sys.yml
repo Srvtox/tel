@@ -1,4 +1,4 @@
-name: Remote Shell ULTRAOPS v12.9 ADVANCED
+name: Remote Shell ULTRAOPS v13 STABLE
 
 on:
   workflow_dispatch:
@@ -17,7 +17,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: "Setup git identity"
+      - name: Setup git identity
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
@@ -26,72 +26,72 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y util-linux coreutils
-          
-          mkdir -p session || true
+
+          mkdir -p session
           touch sessions.log
           touch session/cwd session/env
-          
+
           [ -f commands.txt ] || echo "" > commands.txt
           [ -f session/env ] || echo "#env" > session/env
           [ -f session/cwd ] || pwd > session/cwd
 
-      - name: Start realtime ultra-queue shell
+      - name: Start realtime queue shell
         shell: bash
         run: |
-          set -eo pipefail
 
-          echo "🤖 [ULTRAOPS] Remote Queue Ready"
+          echo "🤖 Remote Queue Shell READY"
 
-          function dequeue() {
-            tail -n +2 commands.txt > .commands.tmp && mv .commands.tmp commands.txt
+          dequeue() {
+            tail -n +2 commands.txt > .tmp && mv .tmp commands.txt
           }
 
-          function commit_push() {
+          commit_push() {
             git add commands.txt sessions.log session/env session/cwd 2>/dev/null || true
-            git commit -m "ops: clean command [skip ci]" >/dev/null 2>&1 || true
-            git pull --rebase --allow-unrelated-histories || true
+            git commit -m "ops update [skip ci]" >/dev/null 2>&1 || true
+            git pull --rebase || true
             git push >/dev/null 2>&1 || true
           }
 
           while true; do
 
             git fetch -q
-            git merge -s ours origin/main -q || true
+            git reset --hard origin/main >/dev/null 2>&1 || true
 
-            [ ! -s commands.txt ] && sleep 0.7 && continue
-
-            # اگر خط اول کامند خالی یا کامنت بود حذف کن
-            head -n 1 commands.txt | grep -E '^$|^#' >/dev/null && { dequeue; commit_push; continue; }
-
-            # جلسه جاری را بخوان
-            cmd="$(head -n 1 commands.txt | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
-
-            # دریافت دایرکتوری کاری فعلی
-            cwd="$(cat session/cwd)"
-
-            # برای اجرای چندخطی
-            if [[ "$cmd" =~ ^ex[[:space:]]+(.+) ]]; then
-              cmd="${BASH_REMATCH[1]}"
+            if [ ! -s commands.txt ]; then
+              sleep 1
+              continue
             fi
+
+            cmd=$(head -n 1 commands.txt | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+
+            if [[ "$cmd" == "" ]] || [[ "$cmd" == \#* ]]; then
+              dequeue
+              commit_push
+              continue
+            fi
+
+            cwd=$(cat session/cwd)
 
             echo ""
             echo "🟢 EXEC: $cmd"
             echo "────────────────────────"
 
-            # اجرای command با محیط bash کامل و پشتیبانی env جاری + هندل exit code
-            code=$(script -q -c "cd \"$cwd\"; source session/env 2>/dev/null || true; bash -ic '$cmd'" /dev/null |
-              stdbuf -oL -eL tee -a sessions.log; echo ${PIPESTATUS[0]})
+            script -q -c "cd \"$cwd\"; source session/env 2>/dev/null; bash -ic '$cmd'" /dev/null \
+            | stdbuf -oL -eL tee -a sessions.log
+
+            exit_code=${PIPESTATUS[0]}
 
             echo "────────────────────────"
-            echo "Exit code ➡️ $code"
+            echo "Exit code ➜ $exit_code"
 
-            # اگر کاربر cwd یا env را ست کرده در دستور، بروزرسانی کن!
+            # update state
             [[ "$cmd" =~ ^cd[[:space:]]+(.+) ]] && echo "${BASH_REMATCH[1]}" > session/cwd
             [[ "$cmd" =~ ^export[[:space:]]+ ]] && echo "$cmd" >> session/env
 
-            # پاک کن/دی‌کیو
+            # همیشه حذف از صف
             dequeue
-            # کامیت و پوش فوری!
+
+            # commit
             commit_push
 
           done
