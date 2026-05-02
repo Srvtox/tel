@@ -55,8 +55,7 @@ jobs:
       - name: Start Remote Shell Engine
         shell: bash
         run: |
-
-          echo "🚀 Remote Shell 10 ULTRA OPS (REALTIME PATCH) Started"
+          echo "🚀 Remote Shell 10 ULTRA OPS REALTIME Started"
 
           set -e
 
@@ -66,8 +65,8 @@ jobs:
             tmux new-session -d -s $SESSION
           fi
 
-          # 🔴 REALTIME STREAM: خروجی tmux زنده میره تو لاگ
-          tmux pipe-pane -t $SESSION -o "cat >> sessions.log"
+          # Real-time log streaming
+          tmux pipe-pane -t $SESSION -o "tee -a sessions.log"
 
           ITER=0
 
@@ -75,7 +74,7 @@ jobs:
 
             ITER=$((ITER+1))
 
-            # 🧠 git fetch فقط هر ~۵ ثانیه
+            # Auto git sync every few seconds
             if [ $((ITER % 25)) -eq 0 ]; then
               git fetch origin || true
 
@@ -106,11 +105,10 @@ jobs:
               NEWFOUND=1
               TS=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
-              # لاگ ریست میشه (طبق نسخه اصلی)
               > sessions.log
               echo "🔵 EXEC ID=$ID : $line" | tee -a sessions.log
 
-              # ---------- EXPORT ENV ----------
+              # ENV EXPORT
               if [[ "$line" =~ ^export[[:space:]] ]]; then
                 VAR=$(echo "$line" | sed -E 's/export[[:space:]]+([A-Za-z_][A-Za-z0-9_]*)=.*/\1/')
                 grep -v "^export $VAR=" session/env > env.tmp || true
@@ -162,9 +160,8 @@ jobs:
                     tmux send-keys -t $SESSION "source session/env 2>/dev/null" Enter
                     tmux send-keys -t $SESSION "$SAFE_CMD" Enter
 
-                    # ⏱ خیلی کوتاه، چون pipe-pane زنده است
                     sleep 0.3
-                    tmux capture-pane -pt $SESSION >> sessions.log
+                    tmux capture-pane -pt $SESSION | tee -a sessions.log
                     EXIT=0
                   fi
                 fi
@@ -172,7 +169,7 @@ jobs:
                 echo "--------------------------------" | tee -a sessions.log
 
               else
-                bash -lc "source session/env && $line" 2>&1 | tee sessions.log
+                bash -lc "source session/env && $line" 2>&1 | tee -a sessions.log
                 EXIT=${PIPESTATUS[0]}
               fi
 
@@ -187,25 +184,30 @@ jobs:
 
             done < commands.txt
 
-            # ---------- INPUT INJECTION (REALTIME) ----------
+
+            # INPUT INJECTION
             if [ -f input.txt ]; then
               CUR_HASH=$(md5sum input.txt | awk '{print $1}')
               OLD_HASH=$(cat .last_input 2>/dev/null || echo "")
 
               if [ "$CUR_HASH" != "$OLD_HASH" ]; then
                 LAST_INPUT=$(tail -n 1 input.txt)
+
                 > sessions.log
                 echo "📥 Injecting input: $LAST_INPUT" | tee -a sessions.log
+
                 tmux send-keys -t $SESSION "$LAST_INPUT" Enter
+
                 echo "$CUR_HASH" > .last_input
-                tmux capture-pane -pt $SESSION >> sessions.log
+
+                tmux capture-pane -pt $SESSION | tee -a sessions.log
+
                 git add sessions.log .last_input
                 git commit -m "input injected [skip ci]" || true
                 git push || true
               fi
             fi
 
-            # ⚡ ULTRA FAST LOOP
             if [ "$NEWFOUND" -eq 0 ]; then
               sleep 0.3
             else
