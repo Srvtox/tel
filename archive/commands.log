@@ -10,3 +10,4 @@ sudo warp-cli status
 curl -s https://ipinfo.io
 ping -c 10 aparat.com
 test
+ping -c 4 google.com
