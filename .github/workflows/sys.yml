@@ -1,4 +1,4 @@
-name: Remote Shell ULTRAOPS v13.1 STABLE
+name: UltraOps GigaPro Max Interactive Terminal
 
 on:
   workflow_dispatch:
@@ -7,111 +7,162 @@ permissions:
   contents: write
 
 jobs:
-  intelligent-shell:
-    runs-on: ubuntu-latest
-    timeout-minutes: 358
+  remote_terminal:
+runs-on: ubuntu-latest
+timeout-minutes: 480
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+steps:
+- name: Checkout
+uses: actions/checkout@v4
+with:
+fetch-depth: 0
 
-      - name: Setup git identity
-        run: |
-          git config --global user.name "github-actions"
-          git config --global user.email "github-actions@github.com"
+- name: Setup git and install dependencies
+shell: bash
+run: |
+git config --global user.name "github-actions"
+git config --global user.email "github-actions@github.com"
 
-      - name: Prepare system
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y util-linux coreutils
+sudo apt-get update
+sudo apt-get install -y tmux
 
-          mkdir -p session
-          touch sessions.log
-          touch session/cwd session/env
+- name: Prepare folders and files
+shell: bash
+run: |
+mkdir -p session session/logs
 
-          [ -f commands.txt ] || echo "" > commands.txt
-          [ -f session/env ] || echo "#env" > session/env
-          [ -f session/cwd ] || pwd > session/cwd
+touch session/session.log
+touch session/cwd
+touch session/env
+touch session/queue.lock
 
-      - name: Start realtime queue shell (Updated v13.1)
-        shell: bash
-        run: |
+[ -f commands.txt ] || echo "" > commands.txt
+[ -s session/cwd ] || pwd > session/cwd
+[ -s session/env ] || echo "#env" > session/env
+[ -f status.md ] || echo "# UltraOps Status" > status.md
 
-          set +e
-          set -o pipefail
+- name: Launch MaxTerminal daemon
+shell: bash
+run: |
 
-          echo "🤖 Remote Queue Shell READY (Updated v13.1)"
+tmux has-session -t ultra 2>/dev/null || tmux new-session -d -s ultra
 
-          dequeue() {
-            tail -n +2 commands.txt > .tmp && mv .tmp commands.txt
-          }
+cat > run.sh <<'SCRIPT'
+#!/usr/bin/env bash
 
-          commit_push() {
-            git add commands.txt sessions.log session/env session/cwd 2>/dev/null || true
-            git commit -m "ops update [skip ci]" >/dev/null 2>&1 || true
-            git pull --rebase --quiet || true
-            git push --quiet || true
-          }
+set +e
+set -o pipefail
 
-          while true; do
+echo "UltraOps Terminal started"
 
-            # ✅ همگام‌سازی امن بدون پاک کردن session
-            git fetch -q
-            git pull --rebase --autostash --quiet || true
+dequeue() {
+  tail -n +2 commands.txt > .tmp && mv .tmp commands.txt
+}
 
-            # ✅ اگر صف خالی است
-            if [ ! -s commands.txt ]; then
-              sleep 1
-              continue
-            fi
+lock_queue() {
+  touch session/queue.lock
+}
 
-            # ✅ خواندن اولین دستور
-            cmd=$(head -n 1 commands.txt | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+unlock_queue() {
+  rm -f session/queue.lock
+}
 
-            # ✅ حذف دستورات خالی یا کامنت
-            if [[ "$cmd" == "" ]] || [[ "$cmd" == \#* ]]; then
-              dequeue
-              commit_push
-              continue
-            fi
+commit_push() {
+  git add commands.txt session session/logs status.md 2>/dev/null || true
+  git commit -m "queue update [skip ci]" >/dev/null 2>&1 || true
+  git pull --rebase --quiet || true
+  git push --quiet || true
+}
 
-            cwd=$(cat session/cwd)
+get_datetime() {
+  date "+%Y-%m-%d %H:%M:%S"
+}
 
-            echo ""
-            echo "🟢 EXEC: $cmd"
-            echo "────────────────────────"
+while true
+do
 
-            # ✅ اجرای واقعی با PTY صحیح
-            script -q -e -c "cd \"$cwd\"; source session/env 2>/dev/null; bash -ic \"$cmd\"" /dev/null \
-            | stdbuf -oL -eL tee -a sessions.log
+  git fetch -q || true
+  git pull --rebase --quiet || true
 
+  if [ -f session/queue.lock ]; then
+sleep 2
+continue
+  fi
 
-            exit_code=${PIPESTATUS[0]}
+  cmd=$(head -n 1 commands.txt | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
 
-            echo "────────────────────────"
-            echo "Exit code ➜ $exit_code"
+  if [ -z "$cmd" ]; then
+sleep 1
+continue
+  fi
 
-            # ✅ مدیریت cd
-            if [[ "$cmd" =~ ^cd[[:space:]]+(.+) ]]; then
-              new_dir="${BASH_REMATCH[1]}"
-              if [ -d "$new_dir" ]; then
-                cd "$new_dir"
-                pwd > session/cwd
-              fi
-            fi
+  if [ "$cmd" = "!CLEAR" ]; then
+echo "[$(get_datetime)] CLEAR QUEUE" >> session/session.log
+echo "" > commands.txt
+dequeue
+commit_push
+continue
+  fi
 
-            # ✅ مدیریت export
-            if [[ "$cmd" =~ ^export[[:space:]]+ ]]; then
-              echo "$cmd" >> session/env
-            fi
+  if [ "$cmd" = "!KILL" ]; then
+echo "[$(get_datetime)] TERMINATE" >> session/session.log
+unlock_queue
+dequeue
+commit_push
+exit 0
+  fi
 
-            # ✅ حذف از صف
-            dequeue
+  lock_queue
 
-            # ✅ ذخیره تغییرات
-            commit_push
+  echo "[$(get_datetime)] RUN: $cmd" >> session/session.log
 
-            sleep 1
-          done
+  tmux send-keys -t ultra "$cmd" C-m
+
+  sleep 2
+
+  tmux capture-pane -t ultra -p -S -300 >> session/session.log
+
+  lastlog=$(tail -n 30 session/session.log)
+
+  {
+echo ""
+echo "## $(get_datetime)"
+echo "$cmd"
+echo "-----"
+echo "$lastlog"
+  } > status.md
+
+  if [[ "$cmd" =~ ^cd[[:space:]]+(.+) ]]; then
+new_dir="${BASH_REMATCH[1]}"
+if [ -d "$new_dir" ]; then
+cd "$new_dir"
+pwd > session/cwd
+fi
+  fi
+
+  if [[ "$cmd" =~ ^export[[:space:]]+ ]]; then
+echo "$cmd" >> session/env
+  fi
+
+  unlock_queue
+  dequeue
+  commit_push
+
+  sleep 1
+
+done
+SCRIPT
+
+chmod +x run.sh
+./run.sh &
+
+- name: Show last output
+shell: bash
+run: |
+echo "==== LAST TERMINAL OUTPUT ===="
+tail -n 30 session/session.log || true
+
+- name: Show status
+shell: bash
+run: |
+cat status.md || true
