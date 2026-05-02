@@ -1,4 +1,4 @@
-name: Remote Shell 12.4 TRUE REALTIME TERMINAL
+name: Remote Shell 12.5 REAL REALTIME TERMINAL
 
 on:
   workflow_dispatch:
@@ -24,7 +24,11 @@ jobs:
 
           mkdir -p session
           : > sessions.log
-          : > commands.txt
+
+          # عدم reset کردن commands.txt
+          if [ ! -f commands.txt ]; then
+              echo "" > commands.txt
+          fi
 
           echo 0 > .rshell_state
           pwd > session/cwd
@@ -33,27 +37,25 @@ jobs:
       - name: Start realtime terminal
         shell: bash
         run: |
-          set -uo pipefail   # بدون -e → با خطا متوقف نشود
+          set -uo pipefail
 
-          echo "🚀 Remote Shell 12.4 TRUE REALTIME TERMINAL MODE"
+          echo "🚀 Remote Shell 12.5 – TRUE REALTIME MODE (NO REPEAT)"
 
-          while true
-          do
-            # ✅ sync بدون اسپم
-            git fetch --all -q > /dev/null 2>&1
-            git reset --hard -q origin/main > /dev/null 2>&1
+          while true; do
+
+            # فقط pull
+            git pull --rebase --no-stat -q || true
 
             last=$(cat .rshell_state)
             id=0
 
             mapfile -t lines < commands.txt || true
 
-            for cmd in "${lines[@]}"
-            do
+            for cmd in "${lines[@]}"; do
+
               id=$((id+1))
 
-              if (( id <= last ))
-              then
+              if (( id <= last )); then
                 continue
               fi
 
@@ -61,7 +63,7 @@ jobs:
               [[ -z "$cmd" ]] && continue
               [[ "$cmd" =~ ^# ]] && continue
 
-              # ✅ سازگاری با ex prefix (میراث قدیمی)
+              # سازگاری با ex
               if [[ "$cmd" =~ ^ex[[:space:]]+(.+) ]]; then
                 cmd="${BASH_REMATCH[1]}"
               fi
@@ -72,13 +74,12 @@ jobs:
 
               cwd=$(cat session/cwd)
 
-              # اجرای دستور داخل PTY واقعی
               script -q -c "
                 cd \"$cwd\"
                 source session/env 2>/dev/null || true
                 bash -ic '$cmd'
-              " /dev/null \
-              | stdbuf -oL -eL tee -a sessions.log
+              " /dev/null |
+              stdbuf -oL -eL tee -a sessions.log
 
               exit_code="${PIPESTATUS[0]}"
 
@@ -87,13 +88,12 @@ jobs:
 
               echo "$id" > .rshell_state
 
-              # ✅ fail-proof git ops
-              git add sessions.log .rshell_state session/env session/cwd 2>/dev/null || true
+              # فقط state را push کن – commands.txt را نه!
+              git add .rshell_state sessions.log session/env session/cwd 2>/dev/null || true
               git commit -m "exec $id [skip ci]" >/dev/null 2>&1 || true
               git push >/dev/null 2>&1 || true
 
-              true  # نرم‌کننده نهایی
             done
 
-            sleep 0.4
+            sleep 0.3
           done
