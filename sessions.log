@@ -3,3 +3,20 @@
 Building dependency tree... 0%Building dependency tree... 0%Building dependency tree... 50%Building dependency tree... 50%Building dependency tree... Done
 Reading state information... 0% Reading state information... 0%Reading state information... Done
 [1;31mE: [0mUnable to locate package code[0m
+total 64
+drwxr-xr-x 6 runner runner 4096 May  2 10:27 .
+drwxr-xr-x 3 runner runner 4096 May  2 10:25 ..
+drwxr-xr-x 7 runner runner 4096 May  2 10:27 .git
+drwxr-xr-x 3 runner runner 4096 May  2 10:25 .github
+-rw-r--r-- 1 runner runner   67 May  2 10:25 .gitignore
+-rw-r--r-- 1 runner runner   33 May  2 10:25 .last_input
+-rw-r--r-- 1 runner runner    2 May  2 10:25 .rshell_state
+-rw-r--r-- 1 runner runner    8 May  2 10:27 commands.txt
+-rw-r--r-- 1 runner runner  749 May  2 10:25 index.html
+-rw-r--r-- 1 runner runner    1 May  2 10:25 input.txt
+drwxr-xr-x 2 runner runner 4096 May  2 10:25 live
+-rw-r--r-- 1 runner runner 1035 May  2 10:25 sas.sh
+drwxr-xr-x 2 runner runner 4096 May  2 10:26 session
+-rw-r--r-- 1 runner runner  437 May  2 10:26 sessions.log
+-rw-r--r-- 1 runner runner 1265 May  2 10:25 st.sh
+-rw-r--r-- 1 runner runner  267 May  2 10:25 telegram_login.py
