@@ -1,15 +1,15 @@
-🔵 EXEC ID=1 : ex curl ifconfig.me
-🖥 Command: curl ifconfig.me
+🔵 EXEC ID=2 : ex curl -6 ifconfig.me
+🖥 Command: curl -6 ifconfig.me
 --------------------------------
 runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
 runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
 runner@runnervmeorf1:~/work/tel/tel$ curl ifconfig.me
-172.212.167.84runner@runnervmeorf1:~/work/tel/tel$
-
-
-
-
-
+172.212.167.84runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
+runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
+runner@runnervmeorf1:~/work/tel/tel$ curl -6 ifconfig.me
+curl: (7) Failed to connect to ifconfig.me port 80 after 2 ms: Couldn't connect
+to server
+runner@runnervmeorf1:~/work/tel/tel$
 
 
 
@@ -26,4 +26,4 @@ runner@runnervmeorf1:~/work/tel/tel$ curl ifconfig.me
 
 
 --------------------------------
-2026-05-02T08:17:28Z | ID=1 | EXIT=0
+2026-05-02T08:19:12Z | ID=2 | EXIT=0
