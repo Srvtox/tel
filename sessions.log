@@ -1,5 +1,5 @@
-🔵 EXEC ID=3 : ex ping6 google.com
-🖥 Command: ping6 google.com
+🔵 EXEC ID=4 : ex sudo systemctl status ssh
+🖥 Command: sudo systemctl status ssh
 --------------------------------
 runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
 runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
@@ -13,17 +13,17 @@ runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
 runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
 runner@runnervmeorf1:~/work/tel/tel$ ping6 google.com
 ping6: connect: Network is unreachable
-runner@runnervmeorf1:~/work/tel/tel$
-
-
-
-
-
-
-
-
-
+runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
+runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
+runner@runnervmeorf1:~/work/tel/tel$ sudo systemctl status ssh
+○ ssh.service - OpenBSD Secure Shell server
+     Loaded: loaded (/usr/lib/systemd/system/ssh.service; disabled; preset: ena>
+     Active: inactive (dead)
+TriggeredBy: ● ssh.socket
+       Docs: man:sshd(8)
+             man:sshd_config(5)
+lines 1-6/6 (END)
 
 
 --------------------------------
-2026-05-02T08:21:36Z | ID=3 | EXIT=0
+2026-05-02T08:25:58Z | ID=4 | EXIT=0
