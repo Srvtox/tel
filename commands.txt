@@ -1,3 +1,4 @@
 ex curl ifconfig.me
 ex curl -6 ifconfig.me
 ex ping6 google.com
+ex sudo systemctl status ssh
