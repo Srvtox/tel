@@ -8,3 +8,4 @@ sudo warp-cli --accept-tos registration new || true
 sudo warp-cli --accept-tos connect || true
 sudo warp-cli status 
 curl -s https://ipinfo.io
+ping -c 10 aparat.com
