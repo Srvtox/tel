@@ -1,1 +1,2 @@
 ex echo "help"
+ex apt install code
