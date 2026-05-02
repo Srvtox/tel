@@ -1,2 +1,3 @@
 [2026-05-02 16:25:32] Creating tmux session in: /home/runner/work/tel/tel
 [2026-05-02 16:25:33] Daemon boot complete
+[2026-05-02 16:25:35] Sent command to tmux: ls
