@@ -1,4 +1,4 @@
-name: Remote Shell 12.5 REAL REALTIME TERMINAL
+name: Remote Shell 12.7 AUTO CLEAN QUEUE
 
 on:
   workflow_dispatch:
@@ -20,80 +20,81 @@ jobs:
       - name: Prepare system
         run: |
           sudo apt-get update
-          sudo apt-get install -y util-linux expect coreutils
+          sudo apt-get install -y util-linux coreutils
 
           mkdir -p session
-          : > sessions.log
+          touch sessions.log
 
-          # عدم reset کردن commands.txt
           if [ ! -f commands.txt ]; then
-              echo "" > commands.txt
+            echo "" > commands.txt
           fi
 
-          echo 0 > .rshell_state
           pwd > session/cwd
           echo "#env" > session/env
 
-      - name: Start realtime terminal
+      - name: Start realtime shell
         shell: bash
         run: |
+
           set -uo pipefail
 
-          echo "🚀 Remote Shell 12.5 – TRUE REALTIME MODE (NO REPEAT)"
+          echo "🚀 Remote Shell 12.7 – AUTO CLEAN MODE"
 
           while true; do
 
-            # فقط pull
-            git pull --rebase --no-stat -q || true
+            # sync repo
+            git fetch -q
+            git merge -s ours origin/main -q || true
 
-            last=$(cat .rshell_state)
-            id=0
+            # اگر فایل خالی بود
+            if [ ! -s commands.txt ]; then
+              sleep 0.4
+              continue
+            fi
 
-            mapfile -t lines < commands.txt || true
+            # اولین دستور
+            cmd=$(head -n 1 commands.txt)
 
-            for cmd in "${lines[@]}"; do
+            # حذف فاصله
+            cmd=$(echo "$cmd" | sed 's/^[[:space:]]*//')
 
-              id=$((id+1))
+            # ignore empty
+            if [[ -z "$cmd" ]] || [[ "$cmd" =~ ^# ]]; then
+              tail -n +2 commands.txt > commands.tmp
+              mv commands.tmp commands.txt
+              continue
+            fi
 
-              if (( id <= last )); then
-                continue
-              fi
+            # سازگاری با ex
+            if [[ "$cmd" =~ ^ex[[:space:]]+(.+) ]]; then
+              cmd="${BASH_REMATCH[1]}"
+            fi
 
-              cmd=$(echo "$cmd" | sed 's/^[[:space:]]*//')
-              [[ -z "$cmd" ]] && continue
-              [[ "$cmd" =~ ^# ]] && continue
+            echo ""
+            echo "🟢 EXEC :: $cmd"
+            echo "────────────────────────"
 
-              # سازگاری با ex
-              if [[ "$cmd" =~ ^ex[[:space:]]+(.+) ]]; then
-                cmd="${BASH_REMATCH[1]}"
-              fi
+            cwd=$(cat session/cwd)
 
-              echo ""
-              echo "🟢 EXEC $id :: $cmd"
-              echo "────────────────────────"
+            script -q -c "
+              cd \"$cwd\"
+              source session/env 2>/dev/null || true
+              bash -ic '$cmd'
+            " /dev/null |
+            stdbuf -oL -eL tee -a sessions.log
 
-              cwd=$(cat session/cwd)
+            exit_code="${PIPESTATUS[0]}"
 
-              script -q -c "
-                cd \"$cwd\"
-                source session/env 2>/dev/null || true
-                bash -ic '$cmd'
-              " /dev/null |
-              stdbuf -oL -eL tee -a sessions.log
+            echo "────────────────────────"
+            echo "EXIT CODE = $exit_code"
 
-              exit_code="${PIPESTATUS[0]}"
+            # حذف دستور اجرا شده
+            tail -n +2 commands.txt > commands.tmp
+            mv commands.tmp commands.txt
 
-              echo "────────────────────────"
-              echo "EXIT CODE = $exit_code"
+            # push
+            git add commands.txt sessions.log session/env session/cwd 2>/dev/null || true
+            git commit -m "exec: $cmd [skip ci]" >/dev/null 2>&1 || true
+            git push >/dev/null 2>&1 || true
 
-              echo "$id" > .rshell_state
-
-              # فقط state را push کن – commands.txt را نه!
-              git add .rshell_state sessions.log session/env session/cwd 2>/dev/null || true
-              git commit -m "exec $id [skip ci]" >/dev/null 2>&1 || true
-              git push >/dev/null 2>&1 || true
-
-            done
-
-            sleep 0.3
           done
