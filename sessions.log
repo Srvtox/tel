@@ -1,9 +1,6 @@
-🔵 EXEC ID=12 : ex yes
-🖥 Command: yes
+🔵 EXEC ID=13 : ex ssh yEgn7MXyuAM4ZvMRqyKP224wP@sfo2.tmate.io
+🖥 Command: ssh yEgn7MXyuAM4ZvMRqyKP224wP@sfo2.tmate.io
 --------------------------------
-May 02 08:30:30 runnervmeorf1 sshd[36595]: Server listening on 0.0.0.0 port 22.
-May 02 08:30:30 runnervmeorf1 sshd[36595]: Server listening on :: port 22.
-May 02 08:30:30 runnervmeorf1 systemd[1]: Started ssh.service - OpenBSD Secure >
 ~
 ~
 ~
@@ -24,6 +21,9 @@ Please type 'yes', 'no' or the fingerprint: source session/env 2>/dev/null
 Please type 'yes', 'no' or the fingerprint: yes
 Warning: Permanently added 'sfo2.tmate.io' (RSA) to the list of known hosts.
 Connection closed by 157.230.72.130 port 22
-runner@runnervmeorf1:~/work/tel/tel$
+runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
+runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
+runner@runnervmeorf1:~/work/tel/tel$ ssh yEgn7MXyuAM4ZvMRqyKP224wP@sfo2.tmate.io
+
 --------------------------------
-2026-05-02T08:39:19Z | ID=12 | EXIT=0
+2026-05-02T08:41:59Z | ID=13 | EXIT=0
