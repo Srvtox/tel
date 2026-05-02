@@ -1,4 +1,4 @@
-name: Remote Shell 10.1 ULTRA OPS REALTIME
+name: Remote Shell 11 ULTRA REALTIME
 
 on:
   workflow_dispatch:
@@ -17,7 +17,6 @@ jobs:
     timeout-minutes: 355
 
     steps:
-
       - name: Checkout
         uses: actions/checkout@v4
         with:
@@ -29,189 +28,190 @@ jobs:
           git config user.email "remote-shell@users.noreply.github.com"
           git config pull.rebase false
 
-      - name: Install Interactive Tools
+      - name: Install Tools
         run: |
-          sudo apt update
-          sudo apt install -y tmux expect
+          sudo apt-get update
+          sudo apt-get install -y tmux expect coreutils
 
       - name: Init State
+        shell: bash
         run: |
+          set -e
           mkdir -p session
-
-          touch commands.txt
-          touch sessions.log
-          touch input.txt
-          touch .last_input
-          touch .rshell_state
-          touch session/env
-          touch session/cwd
-          touch .last_reset
-
+          : > commands.txt
+          : > sessions.log
+          : > input.txt
+          : > .last_input
+          : > .rshell_state
+          : > .last_reset
           [ ! -s .rshell_state ] && echo 0 > .rshell_state
           [ ! -s session/env ] && echo "# Session Env Vars" > session/env
           [ ! -s session/cwd ] && pwd > session/cwd
           [ ! -s .last_reset ] && date +%s > .last_reset
 
-      - name: Start Remote Shell Engine
+      - name: Start Remote Shell Engine (Real-Time)
         shell: bash
         run: |
-          echo "🚀 Remote Shell 10 ULTRA OPS REALTIME Started"
+          set -Eeuo pipefail
+          shopt -s lastpipe
 
-          set -e
+          echo "🚀 Remote Shell 11 ULTRA REALTIME Started"
 
           SESSION="rshell"
 
-          if ! tmux has-session -t $SESSION 2>/dev/null; then
-            tmux new-session -d -s $SESSION
+          # Start a fresh tmux session if not exists
+          if ! tmux has-session -t "$SESSION" 2>/dev/null; then
+            tmux new-session -d -s "$SESSION" -x 180 -y 50
           fi
 
-          # Real-time log streaming
-          tmux pipe-pane -t $SESSION -o "tee -a sessions.log"
+          # Pipe entire pane output to tee -> sessions.log for live stream
+          # -o: only set if not already set (avoid duplicates on restarts)
+          tmux pipe-pane -t "$SESSION" -o "exec cat | tee -a sessions.log"
 
-          ITER=0
+          iter=0
 
           while true; do
+            iter=$((iter+1))
 
-            ITER=$((ITER+1))
-
-            # Auto git sync every few seconds
-            if [ $((ITER % 25)) -eq 0 ]; then
+            # Lightweight auto-sync with remote every ~few seconds
+            if [ $((iter % 25)) -eq 0 ]; then
               git fetch origin || true
-
-              LOCAL=$(git rev-parse HEAD)
-              REMOTE=$(git rev-parse origin/main)
-
-              NOW=$(date +%s)
-              LAST_RESET=$(cat .last_reset)
-
-              if [ "$LOCAL" != "$REMOTE" ] && [ $((NOW-LAST_RESET)) -gt 5 ]; then
-                echo "$NOW" > .last_reset
-                git reset --hard origin/main
+              local_ref=$(git rev-parse HEAD)
+              remote_ref=$(git rev-parse origin/$(git rev-parse --abbrev-ref HEAD))
+              now=$(date +%s)
+              last_reset=$(cat .last_reset || echo 0)
+              if [ "$local_ref" != "$remote_ref" ] && [ $((now-last_reset)) -gt 5 ]; then
+                echo "$now" > .last_reset
+                git reset --hard "$remote_ref" || true
               fi
             fi
 
-            LAST_ID=$(cat .rshell_state)
-            COUNT=0
-            NEWFOUND=0
+            last_id=$(cat .rshell_state)
+            count=0
+            newfound=0
 
-            while IFS= read -r line; do
+            while IFS= read -r line || [ -n "$line" ]; do
+              count=$((count+1))
+              id=$count
 
-              COUNT=$((COUNT+1))
-              ID=$COUNT
+              # skip empty or comment
+              [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]] && continue
+              # already executed
+              if [ "$id" -le "$last_id" ]; then continue; fi
 
-              [[ -z "$line" || "$line" =~ ^# ]] && continue
-              if [ "$ID" -le "$LAST_ID" ]; then continue; fi
+              newfound=1
+              ts=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
-              NEWFOUND=1
-              TS=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-
-              > sessions.log
-              echo "🔵 EXEC ID=$ID : $line" | tee -a sessions.log
-
-              # ENV EXPORT
-              if [[ "$line" =~ ^export[[:space:]] ]]; then
-                VAR=$(echo "$line" | sed -E 's/export[[:space:]]+([A-Za-z_][A-Za-z0-9_]*)=.*/\1/')
-                grep -v "^export $VAR=" session/env > env.tmp || true
-                echo "$line" >> env.tmp
-                mv env.tmp session/env
-
-                echo "$TS export updated" | tee -a sessions.log
-
-                echo "$ID" > .rshell_state
-                git add -f session/env .rshell_state sessions.log
-                git commit -m "env update $ID [skip ci]" || true
-                git push || true
-                continue
-              fi
+              # Reset sessions.log per execution header to keep log focused; still appended by tee during run
+              : > sessions.log
+              echo "🔵 EXEC ID=$id : $line" | tee -a sessions.log
 
               set +e
 
-              if [[ "$line" =~ ^ex[[:space:]] ]]; then
+              # Handle export lines: persist env to session/env
+              if [[ "$line" =~ ^[[:space:]]*export[[:space:]]+ ]]; then
+                var=$(echo "$line" | sed -E 's/^[[:space:]]*export[[:space:]]+([A-Za-z_][A-Za-z0-9_]*).*/\1/')
+                grep -v -E "^[[:space:]]*export[[:space:]]+$var=" session/env > env.tmp || true
+                echo "$line" >> env.tmp
+                mv env.tmp session/env
+                echo "$ts export updated" | tee -a sessions.log
+                exit_code=0
 
+              # Commands prefixed with "ex " execute in tmux with realtime tee
+              elif [[ "$line" =~ ^[[:space:]]*ex[[:space:]]+ ]]; then
                 cmd="${line#ex }"
-                cd "$(cat session/cwd)"
-
                 echo "🖥 Command: $cmd" | tee -a sessions.log
                 echo "--------------------------------" | tee -a sessions.log
 
                 SAFE_CMD="$cmd"
 
-                if [[ "$SAFE_CMD" =~ ^cd[[:space:]] ]]; then
-                  TARGET="${SAFE_CMD#cd }"
-                  cd "$TARGET" 2>/dev/null
-                  pwd > session/cwd
-                  echo "📂 Directory changed to $(cat session/cwd)" | tee -a sessions.log
-                  EXIT=0
-                else
+                # Inline safe transforms for common package managers
+                if [[ "$SAFE_CMD" =~ ^[[:space:]]*apt[[:space:]]+update ]]; then
+                  SAFE_CMD="sudo apt-get update"
+                elif [[ "$SAFE_CMD" =~ ^[[:space:]]*apt[[:space:]]+upgrade ]]; then
+                  SAFE_CMD="sudo DEBIAN_FRONTEND=noninteractive apt-get upgrade -y"
+                elif [[ "$SAFE_CMD" =~ ^[[:space:]]*apt[[:space:]]+install ]]; then
+                  # keep original args but force noninteractive and -y
+                  SAFE_CMD="sudo DEBIAN_FRONTEND=noninteractive ${SAFE_CMD/apt /apt-get } -y"
+                elif [[ "$SAFE_CMD" =~ ^[[:space:]]*pip[[:space:]]+install ]]; then
+                  SAFE_CMD="pip install --break-system-packages ${SAFE_CMD#pip install }"
+                elif [[ "$SAFE_CMD" =~ ^[[:space:]]*npm[[:space:]]+install ]]; then
+                  SAFE_CMD="${SAFE_CMD} --yes"
+                fi
 
-                  [[ "$SAFE_CMD" =~ apt[[:space:]]+install ]] && SAFE_CMD="sudo DEBIAN_FRONTEND=noninteractive $SAFE_CMD -y"
-                  [[ "$SAFE_CMD" =~ apt[[:space:]]+update ]] && SAFE_CMD="sudo $SAFE_CMD"
-                  [[ "$SAFE_CMD" =~ apt[[:space:]]+upgrade ]] && SAFE_CMD="sudo DEBIAN_FRONTEND=noninteractive $SAFE_CMD -y"
-                  [[ "$SAFE_CMD" =~ pip[[:space:]]+install ]] && SAFE_CMD="pip install --break-system-packages ${SAFE_CMD#pip install }"
-                  [[ "$SAFE_CMD" =~ npm[[:space:]]+install ]] && SAFE_CMD="$SAFE_CMD --yes"
-
-                  if [[ "$SAFE_CMD" =~ ^bg[[:space:]] ]]; then
-                    SAFE_CMD="${SAFE_CMD#bg }"
-                    nohup bash -c "$SAFE_CMD" >> sessions.log 2>&1 &
-                    echo "🟢 Started background process" | tee -a sessions.log
-                    EXIT=0
+                # Handle 'cd' specially (no tmux needed)
+                if [[ "$SAFE_CMD" =~ ^[[:space:]]*cd[[:space:]]+ ]]; then
+                  target=$(echo "$SAFE_CMD" | sed -E 's/^[[:space:]]*cd[[:space:]]+//')
+                  if cd "$target" 2>/dev/null; then
+                    pwd > session/cwd
+                    echo "📂 Directory changed to $(cat session/cwd)" | tee -a sessions.log
+                    exit_code=0
                   else
-                    tmux send-keys -t $SESSION "cd $(cat session/cwd)" Enter
-                    tmux send-keys -t $SESSION "source session/env 2>/dev/null" Enter
-                    tmux send-keys -t $SESSION "$SAFE_CMD" Enter
-
-                    sleep 0.3
-                    tmux capture-pane -pt $SESSION | tee -a sessions.log
-                    EXIT=0
+                    echo "❌ cd failed: $target" | tee -a sessions.log
+                    exit_code=1
                   fi
+                # Background command: run detached, still log to file
+                elif [[ "$SAFE_CMD" =~ ^[[:space:]]*bg[[:space:]]+ ]]; then
+                  bg_cmd="${SAFE_CMD#bg }"
+                  nohup bash -lc "cd \"$(cat session/cwd)\"; source session/env 2>/dev/null; $bg_cmd" >> sessions.log 2>&1 &
+                  echo "🟢 Started background process" | tee -a sessions.log
+                  exit_code=0
+                else
+                  # THE IMPORTANT BIT: run inside tmux, pipe stdout+stderr into tee in realtime
+                  # we also add unbuffer if available to reduce stdio buffering, but it's optional
+                  if command -v stdbuf >/dev/null 2>&1; then
+                    run_prefix="stdbuf -oL -eL"
+                  else
+                    run_prefix=""
+                  fi
+
+                  tmux send-keys -t "$SESSION" \
+                    "cd \"$(cat session/cwd)\"; source session/env 2>/dev/null; $run_prefix bash -lc '$SAFE_CMD' 2>&1 | tee -a sessions.log" Enter
+
+                  # Do NOT capture-pane or sleep; tee is streaming directly to sessions.log and GHA log
+                  # We consider success for flow; any non-zero will be visible in log. If you want strict exit detection,
+                  # you can echo a marker and parse it; for now we set to 0 to avoid loop stop.
+                  exit_code=0
                 fi
 
                 echo "--------------------------------" | tee -a sessions.log
 
               else
-                bash -lc "source session/env && $line" 2>&1 | tee -a sessions.log
-                EXIT=${PIPESTATUS[0]}
+                # Non-ex commands run directly in this shell with tee to show realtime
+                bash -lc "cd \"$(cat session/cwd)\"; source session/env 2>/dev/null; $line" 2>&1 | tee -a sessions.log
+                exit_code=${PIPESTATUS[0]}
               fi
 
               set -e
 
-              echo "$TS | ID=$ID | EXIT=$EXIT" | tee -a sessions.log
-              echo "$ID" > .rshell_state
+              echo "$ts | ID=$id | EXIT=$exit_code" | tee -a sessions.log
+              echo "$id" > .rshell_state
 
               git add -f sessions.log .rshell_state session/env session/cwd
-              git commit -m "exec $ID [skip ci]" || true
+              git commit -m "exec $id [skip ci]" || true
               git push || true
 
             done < commands.txt
 
-
-            # INPUT INJECTION
+            # INPUT INJECTION (single-line interactive input)
             if [ -f input.txt ]; then
-              CUR_HASH=$(md5sum input.txt | awk '{print $1}')
-              OLD_HASH=$(cat .last_input 2>/dev/null || echo "")
+              cur_hash=$(md5sum input.txt | awk '{print $1}')
+              old_hash=$(cat .last_input 2>/dev/null || echo "")
+              if [ "$cur_hash" != "$old_hash" ]; then
+                last_input=$(tail -n 1 input.txt)
+                : > sessions.log
+                echo "📥 Injecting input: $last_input" | tee -a sessions.log
 
-              if [ "$CUR_HASH" != "$OLD_HASH" ]; then
-                LAST_INPUT=$(tail -n 1 input.txt)
+                tmux send-keys -t "$SESSION" "$last_input" Enter
 
-                > sessions.log
-                echo "📥 Injecting input: $LAST_INPUT" | tee -a sessions.log
-
-                tmux send-keys -t $SESSION "$LAST_INPUT" Enter
-
-                echo "$CUR_HASH" > .last_input
-
-                tmux capture-pane -pt $SESSION | tee -a sessions.log
-
+                echo "$cur_hash" > .last_input
+                # No capture-pane; pane is already piped to tee -> realtime
                 git add sessions.log .last_input
                 git commit -m "input injected [skip ci]" || true
                 git push || true
               fi
             fi
 
-            if [ "$NEWFOUND" -eq 0 ]; then
-              sleep 0.3
-            else
-              sleep 0.15
-            fi
-
+            # Small idle wait; does not affect realtime streaming of running commands
+            sleep 0.2
           done
