@@ -1,11 +1,6 @@
-🔵 EXEC ID=11 : ex test
-🖥 Command: test
+🔵 EXEC ID=12 : ex yes
+🖥 Command: yes
 --------------------------------
-        CPU: 15ms
-     CGroup: /system.slice/ssh.service
-             └─36595 "sshd: /usr/sbin/sshd -D [listener] 0 of 10-100 startups"
-
-May 02 08:30:30 runnervmeorf1 systemd[1]: Starting ssh.service - OpenBSD Secure>
 May 02 08:30:30 runnervmeorf1 sshd[36595]: Server listening on 0.0.0.0 port 22.
 May 02 08:30:30 runnervmeorf1 sshd[36595]: Server listening on :: port 22.
 May 02 08:30:30 runnervmeorf1 systemd[1]: Started ssh.service - OpenBSD Secure >
@@ -24,6 +19,11 @@ Are you sure you want to continue connecting (yes/no/[fingerprint])? cd /home/ru
 nner/work/tel/tel
 Please type 'yes', 'no' or the fingerprint: source session/env 2>/dev/null
 Please type 'yes', 'no' or the fingerprint: test
-Please type 'yes', 'no' or the fingerprint:
+Please type 'yes', 'no' or the fingerprint: cd /home/runner/work/tel/tel
+Please type 'yes', 'no' or the fingerprint: source session/env 2>/dev/null
+Please type 'yes', 'no' or the fingerprint: yes
+Warning: Permanently added 'sfo2.tmate.io' (RSA) to the list of known hosts.
+Connection closed by 157.230.72.130 port 22
+runner@runnervmeorf1:~/work/tel/tel$
 --------------------------------
-2026-05-02T08:38:39Z | ID=11 | EXIT=0
+2026-05-02T08:39:19Z | ID=12 | EXIT=0
