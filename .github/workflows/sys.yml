@@ -1,24 +1,18 @@
-version: "3.8"
+name: UltraOps CI
 
-services:
-  ultraops:
-    image: ubuntu:22.04
-    container_name: ultraops
-    working_dir: /app
+on: [push, pull_request]
 
-    volumes:
-      - ./:/app
+jobs:
+  ultraops_job:
+    runs-on: ubuntu-latest
 
-    tty: true
-    stdin_open: true
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
 
-    command: >
-      bash -lc "
-      apt-get update &&
-      DEBIAN_FRONTEND=noninteractive apt-get install -y
-        tmux git sed util-linux ca-certificates &&
-      chmod +x /app/run.sh &&
-      /app/run.sh
-      "
-
-    restart: unless-stopped
+      - name: Install dependencies and run script
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y tmux git sed util-linux ca-certificates
+          chmod +x ./run.sh
+          ./run.sh
