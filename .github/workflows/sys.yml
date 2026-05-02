@@ -27,7 +27,7 @@ jobs:
           touch /tmp/runtime/env.json
           touch /tmp/runtime/history
           touch /tmp/actions_logs/session.log
-          touch /tmp/commands.txt # فایل دستورات در مسیر موقت
+          touch /commands.txt # فایل دستورات در مسیر موقت
 
           # تنظیم مسیر جاری به عنوان مسیر پیش‌فرض
           echo "$(pwd)" > /tmp/runtime/cwd.txt
@@ -42,7 +42,7 @@ jobs:
           # تنظیم متغیرهای محیطی
           REPO_DIR="$(pwd)"
           RUNTIME_DIR="/tmp/runtime" # استفاده از مسیر موقت
-          COMMANDS_FILE="/tmp/commands.txt" # استفاده از مسیر موقت
+          COMMANDS_FILE="/commands.txt" # استفاده از مسیر موقت
           SESSION_LOG="/tmp/actions_logs/session.log" # استفاده از مسیر موقت
           CWD_FILE="$RUNTIME_DIR/cwd.txt"
           ENV_FILE="$RUNTIME_DIR/env.json"
