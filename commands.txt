@@ -12,3 +12,4 @@ ex test
 ex yes
 ex ssh yEgn7MXyuAM4ZvMRqyKP224wP@sfo2.tmate.io
 ex yes
+ex clear
