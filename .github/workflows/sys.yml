@@ -1,82 +1,140 @@
-name: ULTRAOPS REALTIME TERMINAL PRO MAX v14
+name: Remote Terminal ULTRAOPS v13.9 ENTERPRISE STABLE
 
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - 'commands.txt'
 
 jobs:
-  remote_shell:
+  remote-terminal:
     runs-on: ubuntu-latest
-    timeout-minutes: 360
+    timeout-minutes: 120
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
-          persist-credentials: false
           fetch-depth: 0
 
-      - name: Setup runtime folders and state
+      - name: Setup runtime directories
         run: |
+          set -e
           mkdir -p runtime
-          touch runtime/cwd.txt runtime/env.sh runtime/history.log
-          # اگر اولین بار است، cwd را خالی می‌گذاریم
+          touch runtime/cwd.txt
+          touch runtime/env.json
+          touch runtime/history
+          touch sessions.log
+          # اگر cwd خالی بود، مسیر جاری رو وارد کن
           if [ ! -s runtime/cwd.txt ]; then
-            echo "$PWD" > runtime/cwd.txt
-          fi
-          # اگه env هنوز نیست، خالی بساز
-          if [ ! -f runtime/env.sh ]; then
-            echo "export PATH=$PATH" > runtime/env.sh
+            pwd > runtime/cwd.txt
           fi
 
-      - name: Ultimate Remote Shell Loop PRO MAX 💥
+      - name: Run dedicated remote terminal loop
         shell: bash
         run: |
-          set -uo pipefail
-          shopt -s nocasematch
+          set +e
 
-          while true; do
-            # سینک امن و کم‌ریسک
-            git pull --rebase origin main -q || true
+          REPO_DIR="$(pwd)"
+          RUNTIME_DIR="$REPO_DIR/runtime"
+          COMMANDS_FILE="$REPO_DIR/commands.txt"
+          SESSION_LOG="$REPO_DIR/sessions.log"
+          CWD_FILE="$RUNTIME_DIR/cwd.txt"
+          ENV_FILE="$RUNTIME_DIR/env.json"
+          HISTORY_FILE="$RUNTIME_DIR/history"
 
-            # اطمینان از فولدر runtime (همیشه آماده!)
-            mkdir -p runtime
+          mkdir -p "$RUNTIME_DIR"
+          touch "$COMMANDS_FILE" "$SESSION_LOG" "$CWD_FILE" "$ENV_FILE" "$HISTORY_FILE"
 
-            # اگر دستور جدیدی نیست صبر کن
-            if ! [ -s commands.txt ]; then
-              sleep 2
-              continue
+          echo "🚀 شروع ULTRAOPS Remote Terminal (Fail-Safe)"
+          echo "منطقه کاری: $REPO_DIR"
+          echo "فایل دستورات: $COMMANDS_FILE"
+          echo "شاخه runtime: $RUNTIME_DIR"
+          echo "─────────────────────────────────────────────"
+
+          # تابع امن برای pull کردن آخرین تغییرات
+          safe_pull() {
+            git pull --rebase origin "$(git rev-parse --abbrev-ref HEAD)" -q || true
+          }
+
+          # تابع امن برای commit و push
+          safe_push() {
+            cd "$REPO_DIR"
+            if ! git diff --quiet || ! git diff --cached --quiet; then
+              git add runtime sessions.log commands.txt 2>/dev/null || true
+              git commit -m "ULTRAOPS: sync runtime and queue" -q || true
+              git push origin "$(git rev-parse --abbrev-ref HEAD)" -q || true
+            fi
+          }
+
+          # دریافت مسیر جاری
+          get_cwd() {
+            if [ -s "$CWD_FILE" ] && [ -d "$(cat "$CWD_FILE")" ]; then
+              cat "$CWD_FILE"
+            else
+              echo "$REPO_DIR"
+            fi
+          }
+
+          # تنظیم مسیر جاری
+          set_cwd() {
+            echo "$1" > "$CWD_FILE"
+          }
+
+          # اجرای یک فرمان بوسیله PTY واقعی و timeout
+          run_command() {
+            local cmd="$1"
+            local workdir
+            workdir="$(get_cwd)"
+
+            echo "🔹 اجرا => $cmd"
+            echo "🔹 اجرا => $cmd" | tee -a "$SESSION_LOG"
+            echo "────────────────────────" | tee -a "$SESSION_LOG"
+
+            # اصلاح دستورات SSH
+            if [[ "$cmd" == ssh* ]]; then
+              cmd="$cmd -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ServerAliveInterval=30 -o ServerAliveCountMax=3"
             fi
 
-            # گرفتن اولین دستور (بدون trim خرابکننده xargs)
-            cmd=$(head -n1 commands.txt | sed 's/[[:space:]]*$//')
+            # دستورات cd را به صورت سومی مدیریت می‌کند
+            if [[ "$cmd" == cd* ]]; then
+              local target="${cmd#cd }"
+              target="${target:-$REPO_DIR}"
+              if [ -d "$target" ]; then
+                (cd "$workdir" && cd "$target" && pwd) > "$CWD_FILE"
+                echo "حالت فعلی: $(cat "$CWD_FILE")" | tee -a "$SESSION_LOG"
+              else
+                echo "خطا: شاخه پیدا نشد - $target" | tee -a "$SESSION_LOG"
+              fi
+              return
+            fi
 
-            # نوشتن در هیستوری (تاریخ + دستور)
-            echo "$(date +"%Y-%m-%d %H:%M:%S") :: $cmd" >> runtime/history.log
+            # اجرای فرمان و جمع‌آوری خروجی
+            {
+              cd "$workdir" && eval "$cmd" 2>&1
+            } | tee -a "$SESSION_LOG"
+            echo "────────────────────────" | tee -a "$SESSION_LOG"
 
-            echo "===== EXECUTING :: $cmd ====="
+            # حذف خط اول (دستور اجرا شده) از فایل دستورات
+            sed -i '1d' "$COMMANDS_FILE"
+            echo "✅ دستور اجرا شد و از صف حذف شد."
+            
+            # بروزرسانی وضعیت runtime
+            safe_push
+          }
 
-            # بارگذاری env و cwd ذخیره شده
-            source runtime/env.sh || true
-            cd "$(cat runtime/cwd.txt || echo $PWD)"
+          # حلقه اصلی
+          while true; do
+            safe_pull
 
-            # اجرای دستور با PTY و Real-Time لاگ گرفتن
-            script -q -c "bash -ic \"$cmd\"" /dev/null | stdbuf -oL -eL tee -a runtime/output.log
+            # اگر دستوری در صف بود، اجرا کن
+            if [ -s "$COMMANDS_FILE" ]; then
+              # فقط اولی رو اجرا کن
+              first_command=$(head -n 1 "$COMMANDS_FILE" | sed 's/[[:space:]]*$//')
+              run_command "$first_command"
+            else
+              echo "🌙 صف دستورات خالی؛ منتظر..."
+            fi
 
-            # ذخیره cwd بعد از اجرا (برای حفظ وضعیت دایرکتوری)
-            pwd > runtime/cwd.txt
-
-            # ذخیره env فعلی
-            export -p > runtime/env.sh
-
-            # **دقیقا بعد از اجرا، دستور را atomic حذف کن**
-            # حذف خط اول فایل commands.txt امن و خطا نداره
-            sed -i '1d' commands.txt
-
-            # commit تغییرات (history ،cwd و حذف دستور)
-            git add runtime/ cwd.txt commands.txt runtime/env.sh runtime/history.log runtime/output.log || true
-            git commit -m "ULTRAOPS: dequeue command and update runtime state" -q || true
-            git push origin main -q || true
-
-            # کمی استراحت بده به CPU ولی نه زیاد (Real-Time هست دیگه!)
-            sleep 1
+            sleep 2
           done
