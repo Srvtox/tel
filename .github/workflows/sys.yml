@@ -1,4 +1,4 @@
-name: Remote Shell 12.7 AUTO CLEAN QUEUE
+name: Remote Shell ULTRAOPS v12.9 ADVANCED
 
 on:
   workflow_dispatch:
@@ -7,9 +7,9 @@ permissions:
   contents: write
 
 jobs:
-  shell:
+  intelligent-shell:
     runs-on: ubuntu-latest
-    timeout-minutes: 350
+    timeout-minutes: 358
 
     steps:
       - name: Checkout
@@ -17,84 +17,81 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: "Setup git identity"
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+
       - name: Prepare system
         run: |
           sudo apt-get update
           sudo apt-get install -y util-linux coreutils
-
-          mkdir -p session
+          
+          mkdir -p session || true
           touch sessions.log
+          touch session/cwd session/env
+          
+          [ -f commands.txt ] || echo "" > commands.txt
+          [ -f session/env ] || echo "#env" > session/env
+          [ -f session/cwd ] || pwd > session/cwd
 
-          if [ ! -f commands.txt ]; then
-            echo "" > commands.txt
-          fi
-
-          pwd > session/cwd
-          echo "#env" > session/env
-
-      - name: Start realtime shell
+      - name: Start realtime ultra-queue shell
         shell: bash
         run: |
+          set -eo pipefail
 
-          set -uo pipefail
+          echo "🤖 [ULTRAOPS] Remote Queue Ready"
 
-          echo "🚀 Remote Shell 12.7 – AUTO CLEAN MODE"
+          function dequeue() {
+            tail -n +2 commands.txt > .commands.tmp && mv .commands.tmp commands.txt
+          }
+
+          function commit_push() {
+            git add commands.txt sessions.log session/env session/cwd 2>/dev/null || true
+            git commit -m "ops: clean command [skip ci]" >/dev/null 2>&1 || true
+            git pull --rebase --allow-unrelated-histories || true
+            git push >/dev/null 2>&1 || true
+          }
 
           while true; do
 
-            # sync repo
             git fetch -q
             git merge -s ours origin/main -q || true
 
-            # اگر فایل خالی بود
-            if [ ! -s commands.txt ]; then
-              sleep 0.4
-              continue
-            fi
+            [ ! -s commands.txt ] && sleep 0.7 && continue
 
-            # اولین دستور
-            cmd=$(head -n 1 commands.txt)
+            # اگر خط اول کامند خالی یا کامنت بود حذف کن
+            head -n 1 commands.txt | grep -E '^$|^#' >/dev/null && { dequeue; commit_push; continue; }
 
-            # حذف فاصله
-            cmd=$(echo "$cmd" | sed 's/^[[:space:]]*//')
+            # جلسه جاری را بخوان
+            cmd="$(head -n 1 commands.txt | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
 
-            # ignore empty
-            if [[ -z "$cmd" ]] || [[ "$cmd" =~ ^# ]]; then
-              tail -n +2 commands.txt > commands.tmp
-              mv commands.tmp commands.txt
-              continue
-            fi
+            # دریافت دایرکتوری کاری فعلی
+            cwd="$(cat session/cwd)"
 
-            # سازگاری با ex
+            # برای اجرای چندخطی
             if [[ "$cmd" =~ ^ex[[:space:]]+(.+) ]]; then
               cmd="${BASH_REMATCH[1]}"
             fi
 
             echo ""
-            echo "🟢 EXEC :: $cmd"
+            echo "🟢 EXEC: $cmd"
             echo "────────────────────────"
 
-            cwd=$(cat session/cwd)
-
-            script -q -c "
-              cd \"$cwd\"
-              source session/env 2>/dev/null || true
-              bash -ic '$cmd'
-            " /dev/null |
-            stdbuf -oL -eL tee -a sessions.log
-
-            exit_code="${PIPESTATUS[0]}"
+            # اجرای command با محیط bash کامل و پشتیبانی env جاری + هندل exit code
+            code=$(script -q -c "cd \"$cwd\"; source session/env 2>/dev/null || true; bash -ic '$cmd'" /dev/null |
+              stdbuf -oL -eL tee -a sessions.log; echo ${PIPESTATUS[0]})
 
             echo "────────────────────────"
-            echo "EXIT CODE = $exit_code"
+            echo "Exit code ➡️ $code"
 
-            # حذف دستور اجرا شده
-            tail -n +2 commands.txt > commands.tmp
-            mv commands.tmp commands.txt
+            # اگر کاربر cwd یا env را ست کرده در دستور، بروزرسانی کن!
+            [[ "$cmd" =~ ^cd[[:space:]]+(.+) ]] && echo "${BASH_REMATCH[1]}" > session/cwd
+            [[ "$cmd" =~ ^export[[:space:]]+ ]] && echo "$cmd" >> session/env
 
-            # push
-            git add commands.txt sessions.log session/env session/cwd 2>/dev/null || true
-            git commit -m "exec: $cmd [skip ci]" >/dev/null 2>&1 || true
-            git push >/dev/null 2>&1 || true
+            # پاک کن/دی‌کیو
+            dequeue
+            # کامیت و پوش فوری!
+            commit_push
 
           done
