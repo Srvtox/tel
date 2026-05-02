@@ -1,27 +1,27 @@
 # Terminal Status
 
-Last update: Sat May  2 15:32:51 UTC 2026
+Last update: Sat May  2 15:32:59 UTC 2026
 
 ## Last output
 ```
-oudflare-warp.gpg] https://pkg.cloudflareclient.com/ $(lsb_release -cs) main" \
-| sudo tee /etc/apt/sources.list.d/cloudflare-client.list
-deb [signed-by=/usr/share/keyrings/cloudflare-warp.gpg] https://pkg.cloudflarecl
-ient.com/ noble main
-runner@runnervmeorf1:~/work/tel/tel$
-runner@runnervmeorf1:~/work/tel/tel$ sudo apt-get update
-
-Get:1 file:/etc/apt/apt-mirrors.txt Mirrorlist [144 B]
-Hit:2 http://azure.archive.ubuntu.com/ubuntu noble InRelease
-Hit:3 http://azure.archive.ubuntu.com/ubuntu noble-updates InRelease
-Hit:4 http://azure.archive.ubuntu.com/ubuntu noble-backports InRelease
-Hit:6 https://packages.microsoft.com/repos/azure-cli noble InRelease
-Hit:5 http://azure.archive.ubuntu.com/ubuntu noble-security InRelease
-Hit:7 https://packages.microsoft.com/ubuntu/24.04/prod noble InRelease
-Hit:8 https://dl.google.com/linux/chrome-stable/deb stable InRelease
-Get:9 https://pkg.cloudflareclient.com noble InRelease [2567 B]
-Get:10 https://pkg.cloudflareclient.com noble/main amd64 Packages [457 B]
-Fetched 3024 B in 1s (5903 B/s)
 Reading package lists... Done
-runner@runnervmeorf1:~/work/tel/tel$
+Building dependency tree... Done
+Reading state information... Done
+The following additional packages will be installed:
+  desktop-file-utils
+Suggested packages:
+  traceroute
+The following NEW packages will be installed:
+  cloudflare-warp desktop-file-utils
+0 upgraded, 2 newly installed, 0 to remove and 51 not upgraded.
+Need to get 54.5 MB of archives.
+After this operation, 157 MB of additional disk space will be used.
+Get:1 file:/etc/apt/apt-mirrors.txt Mirrorlist [144 B]
+Get:2 http://azure.archive.ubuntu.com/ubuntu noble/main amd64 desktop-file-utils
+ amd64 0.27-2build1 [53.8 kB]
+Get:3 https://pkg.cloudflareclient.com noble/main amd64 cloudflare-warp amd64 20
+26.3.846.0 [54.4 MB]
+Fetched 54.5 MB in 1s (40.5 MB/s)
+Selecting previously unselected package desktop-file-utils.
+(Reading database ... 95%
 ```
