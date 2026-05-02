@@ -1,29 +1,29 @@
-🔵 EXEC ID=4 : ex sudo systemctl status ssh
-🖥 Command: sudo systemctl status ssh
+🔵 EXEC ID=5 : ex q
+🖥 Command: q
 --------------------------------
-runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
-runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
-runner@runnervmeorf1:~/work/tel/tel$ curl ifconfig.me
-172.212.167.84runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
-runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
-runner@runnervmeorf1:~/work/tel/tel$ curl -6 ifconfig.me
-curl: (7) Failed to connect to ifconfig.me port 80 after 2 ms: Couldn't connect
-to server
-runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
-runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
-runner@runnervmeorf1:~/work/tel/tel$ ping6 google.com
-ping6: connect: Network is unreachable
-runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
-runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
-runner@runnervmeorf1:~/work/tel/tel$ sudo systemctl status ssh
 ○ ssh.service - OpenBSD Secure Shell server
      Loaded: loaded (/usr/lib/systemd/system/ssh.service; disabled; preset: ena>
      Active: inactive (dead)
 TriggeredBy: ● ssh.socket
        Docs: man:sshd(8)
              man:sshd_config(5)
-lines 1-6/6 (END)
-
-
+~
+~
+~
+~
+~
+~
+~
+~
+~
+~
+~
+~
+~
+~
+~
+~
+~
+runner@runnervmeorf1:~/work/tel/tel$
 --------------------------------
-2026-05-02T08:25:58Z | ID=4 | EXIT=0
+2026-05-02T08:29:01Z | ID=5 | EXIT=0
