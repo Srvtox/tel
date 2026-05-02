@@ -1,29 +1,29 @@
-🔵 EXEC ID=15 : ex clear
-🖥 Command: clear
+🔵 EXEC ID=1 : ex echo "help"
+🖥 Command: echo "help"
 --------------------------------
-y
-y
-y
-y
-y
-y
-y
-y
-y
-y
-y
-y
-y
-y
-y
-y
-y
-y
-y
-y
-y
-y
-y
+runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
+runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
+runner@runnervmeorf1:~/work/tel/tel$ echo "help"
+help
+runner@runnervmeorf1:~/work/tel/tel$
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 --------------------------------
-2026-05-02T08:43:29Z | ID=15 | EXIT=0
+2026-05-02T08:55:40Z | ID=1 | EXIT=0
