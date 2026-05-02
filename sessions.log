@@ -1,9 +1,6 @@
-🔵 EXEC ID=9 : ex q
-🖥 Command: q
+🔵 EXEC ID=10 : ex ssh yEgn7MXyuAM4ZvMRqyKP224wP@sfo2.tmate.io
+🖥 Command: ssh yEgn7MXyuAM4ZvMRqyKP224wP@sfo2.tmate.io
 --------------------------------
-● ssh.service - OpenBSD Secure Shell server
-     Loaded: loaded (/usr/lib/systemd/system/ssh.service; disabled; preset: ena>
-     Active: active (running) since Sat 2026-05-02 08:30:30 UTC; 1s ago
 TriggeredBy: ● ssh.socket
        Docs: man:sshd(8)
              man:sshd_config(5)
@@ -24,6 +21,9 @@ May 02 08:30:30 runnervmeorf1 systemd[1]: Started ssh.service - OpenBSD Secure >
 ~
 ~
 ~
-runner@runnervmeorf1:~/work/tel/tel$
+runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
+runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
+runner@runnervmeorf1:~/work/tel/tel$ ssh yEgn7MXyuAM4ZvMRqyKP224wP@sfo2.tmate.io
+
 --------------------------------
-2026-05-02T08:38:05Z | ID=9 | EXIT=0
+2026-05-02T08:38:06Z | ID=10 | EXIT=0
