@@ -1,4 +1,4 @@
-name: Remote Shell ULTRAOPS v13 STABLE
+name: Remote Queue Shell
 
 on:
   workflow_dispatch:
@@ -7,9 +7,9 @@ permissions:
   contents: write
 
 jobs:
-  intelligent-shell:
+  shell:
     runs-on: ubuntu-latest
-    timeout-minutes: 358
+    timeout-minutes: 350
 
     steps:
       - name: Checkout
@@ -17,81 +17,83 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup git identity
+      - name: Setup git
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
 
-      - name: Prepare system
+      - name: Prepare environment
         run: |
-          sudo apt-get update
-          sudo apt-get install -y util-linux coreutils
+          sudo apt-get update -y
+          sudo apt-get install -y util-linux coreutils timeout
 
           mkdir -p session
           touch sessions.log
-          touch session/cwd session/env
+          [ -f commands.txt ] || touch commands.txt
 
-          [ -f commands.txt ] || echo "" > commands.txt
-          [ -f session/env ] || echo "#env" > session/env
-          [ -f session/cwd ] || pwd > session/cwd
-
-      - name: Start realtime queue shell
+      - name: Start remote queue
         shell: bash
         run: |
-
-          echo "🤖 Remote Queue Shell READY"
+          echo "🤖 Remote Queue Ready"
 
           dequeue() {
             tail -n +2 commands.txt > .tmp && mv .tmp commands.txt
           }
 
-          commit_push() {
-            git add commands.txt sessions.log session/env session/cwd 2>/dev/null || true
-            git commit -m "ops update [skip ci]" >/dev/null 2>&1 || true
-            git pull --rebase || true
+          push_repo() {
+            git add commands.txt sessions.log 2>/dev/null || true
+            git commit -m "queue update [skip ci]" >/dev/null 2>&1 || true
+            git pull --rebase origin main >/dev/null 2>&1 || true
             git push >/dev/null 2>&1 || true
           }
 
-          while true; do
+          normalize_cmd() {
+            local raw="$1"
 
-            git fetch -q
-            git reset --hard origin/main >/dev/null 2>&1 || true
+            # اگر دستور با ssh شروع شود، گزینه‌های non-interactive اضافه کن
+            if [[ "$raw" =~ ^ssh[[:space:]]+ ]]; then
+              echo "$raw -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ServerAliveInterval=30 -o ServerAliveCountMax=3"
+            else
+              echo "$raw"
+            fi
+          }
+
+          while true
+          do
+            git fetch origin main -q
+            git reset --hard origin/main -q || true
 
             if [ ! -s commands.txt ]; then
               sleep 1
               continue
             fi
 
-            cmd=$(head -n 1 commands.txt | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+            raw_cmd=$(head -n 1 commands.txt | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
 
-            if [[ "$cmd" == "" ]] || [[ "$cmd" == \#* ]]; then
+            if [ -z "$raw_cmd" ]; then
               dequeue
-              commit_push
+              push_repo
               continue
             fi
 
-            cwd=$(cat session/cwd)
+            cmd="$(normalize_cmd "$raw_cmd")"
 
             echo ""
-            echo "🟢 EXEC: $cmd"
-            echo "────────────────────────"
+            echo "🟢 EXEC: $raw_cmd"
+            echo "────────────────────"
 
-            script -q -c "cd \"$cwd\"; source session/env 2>/dev/null; bash -ic '$cmd'" /dev/null \
-            | stdbuf -oL -eL tee -a sessions.log
+            # هر دستور حداکثر 120 ثانیه
+            timeout 120s script -q -c "bash -ic '$cmd'" /dev/null \
+              | stdbuf -oL -eL tee -a sessions.log
 
             exit_code=${PIPESTATUS[0]}
 
-            echo "────────────────────────"
-            echo "Exit code ➜ $exit_code"
+            echo "────────────────────"
+            echo "EXIT ➜ $exit_code"
 
-            # update state
-            [[ "$cmd" =~ ^cd[[:space:]]+(.+) ]] && echo "${BASH_REMATCH[1]}" > session/cwd
-            [[ "$cmd" =~ ^export[[:space:]]+ ]] && echo "$cmd" >> session/env
-
-            # همیشه حذف از صف
+            # بعد از اجرا، دستور حذف شود حتی اگر fail شود
             dequeue
 
-            # commit
-            commit_push
-
+            # ذخیره
+            push_repo
           done
