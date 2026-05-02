@@ -1,141 +1,82 @@
-name: Remote Shell Engine PRO MAX
+name: ULTRAOPS REALTIME TERMINAL PRO MAX v14
 
 on:
   workflow_dispatch:
-  push:
-    paths:
-      - commands.txt
-
-permissions:
-  contents: write
 
 jobs:
-  runner:
+  remote_shell:
     runs-on: ubuntu-latest
-    timeout-minutes: 350
+    timeout-minutes: 360
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - name: Checkout repo
+        uses: actions/checkout@v3
         with:
+          persist-credentials: false
           fetch-depth: 0
 
-      - name: Prepare Environment
+      - name: Setup runtime folders and state
         run: |
-          sudo apt-get update -y
-          sudo apt-get install -y tmux screen expect util-linux coreutils jq openssh-client
-
           mkdir -p runtime
-          touch runtime/env.json
-          touch runtime/cwd.txt
-          touch runtime/history
-          touch sessions.log
+          touch runtime/cwd.txt runtime/env.sh runtime/history.log
+          # اگر اولین بار است، cwd را خالی می‌گذاریم
+          if [ ! -s runtime/cwd.txt ]; then
+            echo "$PWD" > runtime/cwd.txt
+          fi
+          # اگه env هنوز نیست، خالی بساز
+          if [ ! -f runtime/env.sh ]; then
+            echo "export PATH=$PATH" > runtime/env.sh
+          fi
 
-          echo "$HOME" > runtime/cwd.txt
-
-          [ -f commands.txt ] || touch commands.txt
-
-      - name: Start PRO MAX Shell Engine
+      - name: Ultimate Remote Shell Loop PRO MAX 💥
         shell: bash
         run: |
-          set +e
-
-          LOG="sessions.log"
-          STATE_ENV="runtime/env.json"
-          STATE_CWD="runtime/cwd.txt"
-          HISTORY="runtime/history"
-
-          save_state() {
-            local exit=$1
-            jq -n \
-              --arg cwd "$(cat $STATE_CWD)" \
-              --argjson exit $exit \
-              '{cwd: $cwd, exit: $exit}' > runtime/last_state.json
-          }
-
-          dequeue() {
-            tail -n +2 commands.txt > .tmp && mv .tmp commands.txt
-          }
-
-          git_sync() {
-            git add . >/dev/null 2>&1 || true
-            git commit -m "update [skip ci]" >/dev/null 2>&1 || true
-            git pull --rebase origin main >/dev/null 2>&1 || true
-            git push >/dev/null 2>&1 || true
-          }
-
-          normalize_cmd() {
-            local c="$1"
-
-            if [[ "$c" =~ ^cd[[:space:]]+ ]]; then
-              echo "__CD__ ${c#cd }"
-              return
-            fi
-
-            if [[ "$c" =~ ^export[[:space:]]+ ]]; then
-              echo "__EXPORT__ ${c#export }"
-              return
-            fi
-
-            if [[ "$c" =~ ^ssh[[:space:]]+ ]]; then
-              echo "$c -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ServerAliveInterval=15 -o ServerAliveCountMax=3"
-              return
-            fi
-
-            echo "$c"
-          }
+          set -uo pipefail
+          shopt -s nocasematch
 
           while true; do
-            git fetch origin main -q
-            git reset --hard origin/main -q || true
+            # سینک امن و کم‌ریسک
+            git pull --rebase origin main -q || true
 
-            if [ ! -s commands.txt ]; then
-              sleep 1
+            # اطمینان از فولدر runtime (همیشه آماده!)
+            mkdir -p runtime
+
+            # اگر دستور جدیدی نیست صبر کن
+            if ! [ -s commands.txt ]; then
+              sleep 2
               continue
             fi
 
-            raw=$(head -n 1 commands.txt | xargs)
-            cmd=$(normalize_cmd "$raw")
+            # گرفتن اولین دستور (بدون trim خرابکننده xargs)
+            cmd=$(head -n1 commands.txt | sed 's/[[:space:]]*$//')
 
-            echo "" | tee -a "$LOG"
-            echo "🔹 EXEC => $raw" | tee -a "$LOG"
-            echo "────────────────────────" | tee -a "$LOG"
+            # نوشتن در هیستوری (تاریخ + دستور)
+            echo "$(date +"%Y-%m-%d %H:%M:%S") :: $cmd" >> runtime/history.log
 
-            if [[ "$cmd" == __CD__* ]]; then
-              newdir="${cmd#__CD__ }"
-              if cd "$newdir" 2>/dev/null; then
-                pwd > "$STATE_CWD"
-                echo "Changed directory to $(pwd)" | tee -a "$LOG"
-                save_state 0
-              else
-                echo "cd: no such directory" | tee -a "$LOG"
-                save_state 1
-              fi
-              dequeue
-              git_sync
-              continue
-            fi
+            echo "===== EXECUTING :: $cmd ====="
 
-            if [[ "$cmd" == __EXPORT__* ]]; then
-              eval "export ${cmd#__EXPORT__ }"
-              echo "$cmd" >> "$STATE_ENV"
-              echo "env updated" | tee -a "$LOG"
-              save_state 0
-              dequeue
-              git_sync
-              continue
-            fi
+            # بارگذاری env و cwd ذخیره شده
+            source runtime/env.sh || true
+            cd "$(cat runtime/cwd.txt || echo $PWD)"
 
-            timeout 200s script -q -c "bash -ic '$cmd'" /dev/null \
-              | stdbuf -oL -eL tee -a "$LOG"
+            # اجرای دستور با PTY و Real-Time لاگ گرفتن
+            script -q -c "bash -ic \"$cmd\"" /dev/null | stdbuf -oL -eL tee -a runtime/output.log
 
-            exit_code=${PIPESTATUS[0]}
-            save_state "$exit_code"
+            # ذخیره cwd بعد از اجرا (برای حفظ وضعیت دایرکتوری)
+            pwd > runtime/cwd.txt
 
-            echo "────────────────────────" | tee -a "$LOG"
-            echo "EXIT CODE: $exit_code" | tee -a "$LOG"
+            # ذخیره env فعلی
+            export -p > runtime/env.sh
 
-            dequeue
-            git_sync
+            # **دقیقا بعد از اجرا، دستور را atomic حذف کن**
+            # حذف خط اول فایل commands.txt امن و خطا نداره
+            sed -i '1d' commands.txt
 
+            # commit تغییرات (history ،cwd و حذف دستور)
+            git add runtime/ cwd.txt commands.txt runtime/env.sh runtime/history.log runtime/output.log || true
+            git commit -m "ULTRAOPS: dequeue command and update runtime state" -q || true
+            git push origin main -q || true
+
+            # کمی استراحت بده به CPU ولی نه زیاد (Real-Time هست دیگه!)
+            sleep 1
           done
