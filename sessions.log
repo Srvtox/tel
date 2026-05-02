@@ -1,5 +1,5 @@
-🔵 EXEC ID=8 : ex sshg yEgn7MXyuAM4ZvMRqyKP224wP@sfo2.tmate.io
-🖥 Command: sshg yEgn7MXyuAM4ZvMRqyKP224wP@sfo2.tmate.io
+🔵 EXEC ID=9 : ex q
+🖥 Command: q
 --------------------------------
 ● ssh.service - OpenBSD Secure Shell server
      Loaded: loaded (/usr/lib/systemd/system/ssh.service; disabled; preset: ena>
@@ -24,6 +24,6 @@ May 02 08:30:30 runnervmeorf1 systemd[1]: Started ssh.service - OpenBSD Secure >
 ~
 ~
 ~
-log file support is not available  (press RETURN)
+runner@runnervmeorf1:~/work/tel/tel$
 --------------------------------
-2026-05-02T08:37:24Z | ID=8 | EXIT=0
+2026-05-02T08:38:05Z | ID=9 | EXIT=0
