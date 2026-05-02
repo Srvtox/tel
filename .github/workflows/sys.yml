@@ -1,13 +1,14 @@
-name: UltraOps Immortal Terminal v17
+name: UltraOps v18 Terminal
 
 on:
   push:
     branches: [ main ]
     paths-ignore:
       - "commands.txt"
-      - "status.md"
+      - "priority.txt"
       - "session/**"
       - "logs/**"
+      - "status.md"
   workflow_dispatch:
 
 concurrency:
@@ -20,223 +21,216 @@ jobs:
     timeout-minutes: 360
 
     steps:
-      - name: Checkout repository
+
+      - name: Checkout
         uses: actions/checkout@v4
         with:
-          persist-credentials: true
           fetch-depth: 0
 
-      - name: Configure git
+      - name: Git config
         run: |
-          git config --global user.email "github-actions@users.noreply.github.com"
-          git config --global user.name "UltraOps Bot"
+          git config --global user.name "UltraOps"
+          git config --global user.email "actions@github.com"
 
-      - name: Install dependencies
+      - name: Install tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y tmux coreutils sed gawk grep
+          sudo apt-get install -y tmux
 
-      - name: Prepare files
+      - name: Prepare environment
         run: |
-          mkdir -p session logs
+
+          mkdir -p session
+          mkdir -p logs
+
           touch commands.txt
+          touch priority.txt
           touch session/session.log
           touch session/cwd
           touch logs/daemon.log
 
-      - name: Create UltraOps daemon
+      - name: Create daemon
         run: |
-          cat > run.sh <<'SCRIPT'
-          #!/usr/bin/env bash
-          set -uo pipefail
 
-          QUEUE_FILE="commands.txt"
-          STATUS_FILE="status.md"
-          SESSION_DIR="session"
-          LOG_DIR="logs"
-          SESSION_LOG="$SESSION_DIR/session.log"
-          SESSION_CWD="$SESSION_DIR/cwd"
-          DAEMON_LOG="$LOG_DIR/daemon.log"
-          TMUX_SESSION="ultraops"
-          TMUX_PANE="${TMUX_SESSION}:0.0"
-          STATUS_LINES="${STATUS_LINES:-4000}"
+          cat << 'EOF' > daemon.sh
+          #!/usr/bin/env bash
+
+          QUEUE="commands.txt"
+          PRIORITY="priority.txt"
+
+          SESSION="ultraops"
+          PANE="$SESSION:0.0"
+
+          LOG="session/session.log"
+          CWD_FILE="session/cwd"
+
+          STATUS="status.md"
 
           now() {
             date "+%Y-%m-%d %H:%M:%S"
           }
 
-          dlog() {
-            echo "[$(now)] $*" | tee -a "$DAEMON_LOG" >/dev/null
-          }
-
-          slog() {
-            echo "[$(now)] $*" >> "$SESSION_LOG"
-          }
-
-          ensure_files() {
-            mkdir -p "$SESSION_DIR" "$LOG_DIR"
-            touch "$QUEUE_FILE" "$SESSION_LOG" "$SESSION_CWD" "$DAEMON_LOG"
-            if [ ! -s "$SESSION_CWD" ]; then
-              pwd > "$SESSION_CWD"
-            fi
-          }
-
-          safe_git_sync() {
-            git add commands.txt status.md session logs >/dev/null 2>&1 || true
+          git_sync() {
+            git add commands.txt priority.txt session status.md logs >/dev/null 2>&1
             git commit -m "UltraOps update [skip ci]" >/dev/null 2>&1 || true
             git pull --rebase >/dev/null 2>&1 || true
             git push >/dev/null 2>&1 || true
           }
 
           update_status() {
+
+            CUR=$(cat "$CWD_FILE" 2>/dev/null || pwd)
+
             {
               echo "# UltraOps Terminal"
               echo
               echo "Last update: $(now)"
               echo
-              echo "## Current Directory"
-              cat "$SESSION_CWD" 2>/dev/null || echo "unknown"
+              echo "## Current directory"
+              echo "$CUR"
               echo
-              echo "## Last ${STATUS_LINES} lines"
-              echo
+              echo "## Last output"
               echo '```'
-              tail -n "$STATUS_LINES" "$SESSION_LOG" 2>/dev/null || true
+              tail -n 200 "$LOG"
               echo '```'
-            } > "$STATUS_FILE"
-          }
+            } > "$STATUS"
 
-          dequeue() {
-            if [ ! -f "$QUEUE_FILE" ]; then
-              touch "$QUEUE_FILE"
-              return
-            fi
-
-            tail -n +2 "$QUEUE_FILE" > "$QUEUE_FILE.tmp" 2>/dev/null || true
-            mv "$QUEUE_FILE.tmp" "$QUEUE_FILE" 2>/dev/null || : > "$QUEUE_FILE"
           }
 
           ensure_tmux() {
-            if ! tmux has-session -t "$TMUX_SESSION" 2>/dev/null; then
-              START_DIR="$(cat "$SESSION_CWD" 2>/dev/null || pwd)"
-              [ -d "$START_DIR" ] || START_DIR="$PWD"
-              dlog "Creating tmux session in: $START_DIR"
-              tmux new-session -d -s "$TMUX_SESSION" -c "$START_DIR" "bash --noprofile --norc"
-              sleep 1
-            fi
-          }
 
-          capture_pane_to_log() {
-            local tmpfile
-            tmpfile="$(mktemp)"
-            tmux capture-pane -p -S -200 -t "$TMUX_PANE" > "$tmpfile" 2>/dev/null || true
+            if ! tmux has-session -t "$SESSION" 2>/dev/null; then
 
-            if [ -s "$tmpfile" ]; then
-              {
-                echo "[$(now)] --- pane capture start ---"
-                cat "$tmpfile"
-                echo "[$(now)] --- pane capture end ---"
-              } >> "$SESSION_LOG"
-            else
-              slog "WARN: pane capture empty"
+              START=$(pwd)
+
+              tmux new-session -d -s "$SESSION" -c "$START" bash
+
+              tmux pipe-pane -o -t "$PANE" "cat >> $LOG"
+
+              echo "$START" > "$CWD_FILE"
+
             fi
 
-            rm -f "$tmpfile"
           }
 
-          sync_cwd_from_tmux() {
-            local current_dir=""
-            tmux send-keys -t "$TMUX_PANE" 'pwd > .ultraops_pwd_marker' C-m
-            sleep 1
+          get_command() {
 
-            current_dir="$(tmux capture-pane -p -S -40 -t "$TMUX_PANE" | tail -n 20 | grep -v 'pwd > .ultraops_pwd_marker' | tail -n 1 | tr -d '\r' || true)"
-
-            if [ -n "$current_dir" ] && [ -d "$current_dir" ]; then
-              echo "$current_dir" > "$SESSION_CWD"
+            if [ -s "$PRIORITY" ]; then
+              head -n1 "$PRIORITY"
+              tail -n +2 "$PRIORITY" > "$PRIORITY.tmp"
+              mv "$PRIORITY.tmp" "$PRIORITY"
+              return
             fi
+
+            if [ -s "$QUEUE" ]; then
+              head -n1 "$QUEUE"
+              tail -n +2 "$QUEUE" > "$QUEUE.tmp"
+              mv "$QUEUE.tmp" "$QUEUE"
+              return
+            fi
+
           }
 
-          execute_command() {
-            local cmd="$1"
+          run_command() {
 
-            slog "RUN: $cmd"
+            CMD="$1"
 
-            tmux send-keys -t "$TMUX_PANE" "$cmd" C-m
-            dlog "Sent command to tmux: $cmd"
+            echo "" >> "$LOG"
+            echo "[$(now)] RUN: $CMD" >> "$LOG"
+
+            case "$CMD" in
+
+              "!CLEAR")
+
+                > "$LOG"
+                echo "log cleared" >> "$LOG"
+
+              ;;
+
+              "!STATUS")
+
+                echo "[$(now)] STATUS OK" >> "$LOG"
+
+              ;;
+
+              "!KILL")
+
+                echo "[$(now)] TERMINATED" >> "$LOG"
+                tmux kill-session -t "$SESSION"
+                exit 0
+
+              ;;
+
+              "!RESTART")
+
+                echo "[$(now)] RESTARTING" >> "$LOG"
+                exec "$0"
+
+              ;;
+
+              *)
+
+                tmux send-keys -t "$PANE" "$CMD" C-m
+
+                if [[ "$CMD" == cd* ]]; then
+
+                  sleep 1
+
+                  tmux send-keys -t "$PANE" "pwd > .cwd_marker" C-m
+                  sleep 1
+
+                  DIR=$(tmux capture-pane -p -S -20 -t "$PANE" | tail -n1)
+
+                  if [ -d "$DIR" ]; then
+                    echo "$DIR" > "$CWD_FILE"
+                  fi
+
+                fi
+
+              ;;
+
+            esac
+
+          }
+
+          ensure_tmux
+
+          echo "[$(now)] Daemon started" >> "$LOG"
+
+          update_status
+          git_sync
+
+          while true
+          do
+
+            git pull --rebase >/dev/null 2>&1 || true
+
+            CMD=$(get_command)
+
+            if [ ! -z "$CMD" ]; then
+
+              run_command "$CMD"
+
+              update_status
+              git_sync
+
+            fi
 
             sleep 2
 
-            capture_pane_to_log
-            sync_cwd_from_tmux
-          }
-
-          ensure_files
-          ensure_tmux
-
-          slog "Daemon started"
-          dlog "Daemon boot complete"
-
-          update_status
-          safe_git_sync
-
-          while true; do
-            git fetch -q >/dev/null 2>&1 || true
-            git pull --rebase -q >/dev/null 2>&1 || true
-
-            if [ ! -s "$QUEUE_FILE" ]; then
-              sleep 2
-              continue
-            fi
-
-            cmd="$(head -n 1 "$QUEUE_FILE" | tr -d '\r')"
-
-            if [ -z "$cmd" ]; then
-              dequeue
-              sleep 1
-              continue
-            fi
-
-            case "$cmd" in
-              "!CLEAR")
-                : > "$QUEUE_FILE"
-                : > "$SESSION_LOG"
-                slog "QUEUE CLEARED"
-                update_status
-                safe_git_sync
-                sleep 1
-                continue
-                ;;
-              "!KILL")
-                slog "TERMINATED BY ADMIN COMMAND"
-                update_status
-                safe_git_sync
-                tmux kill-session -t "$TMUX_SESSION" 2>/dev/null || true
-                exit 0
-                ;;
-              *)
-                execute_command "$cmd"
-                dequeue
-                update_status
-                safe_git_sync
-                ;;
-            esac
-
-            sleep 1
           done
-          SCRIPT
+          EOF
 
-          chmod +x run.sh
+          chmod +x daemon.sh
 
       - name: Start daemon
         run: |
-          nohup ./run.sh > logs/daemon_stdout.log 2>&1 &
-          sleep 5
-          echo "Daemon started in background"
-          ls -la logs
-          ls -la session
+          nohup ./daemon.sh > logs/out.log 2>&1 &
 
-      - name: Keep runner alive
+      - name: Keep alive
         run: |
-          while true; do
-            echo "heartbeat $(date)"
+          while true
+          do
+            echo "alive $(date)"
             sleep 300
           done
