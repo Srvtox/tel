@@ -1,4 +1,4 @@
-name: Remote Shell 12.3 TRUE REALTIME TERMINAL
+name: Remote Shell 12.4 TRUE REALTIME TERMINAL
 
 on:
   workflow_dispatch:
@@ -33,17 +33,15 @@ jobs:
       - name: Start realtime terminal
         shell: bash
         run: |
-
           set -uo pipefail   # بدون -e → با خطا متوقف نشود
 
-          echo "🚀 Remote Shell 12.3 TERMINAL MODE"
+          echo "🚀 Remote Shell 12.4 TRUE REALTIME TERMINAL MODE"
 
           while true
           do
-
-            # همیشه آخرین commands.txt را بگیر
-            git fetch --all
-            git reset --hard origin/main
+            # ✅ sync بدون اسپم
+            git fetch --all -q > /dev/null 2>&1
+            git reset --hard -q origin/main > /dev/null 2>&1
 
             last=$(cat .rshell_state)
             id=0
@@ -52,7 +50,6 @@ jobs:
 
             for cmd in "${lines[@]}"
             do
-
               id=$((id+1))
 
               if (( id <= last ))
@@ -64,6 +61,11 @@ jobs:
               [[ -z "$cmd" ]] && continue
               [[ "$cmd" =~ ^# ]] && continue
 
+              # ✅ سازگاری با ex prefix (میراث قدیمی)
+              if [[ "$cmd" =~ ^ex[[:space:]]+(.+) ]]; then
+                cmd="${BASH_REMATCH[1]}"
+              fi
+
               echo ""
               echo "🟢 EXEC $id :: $cmd"
               echo "────────────────────────"
@@ -73,24 +75,25 @@ jobs:
               # اجرای دستور داخل PTY واقعی
               script -q -c "
                 cd \"$cwd\"
-                source session/env 2>/dev/null
+                source session/env 2>/dev/null || true
                 bash -ic '$cmd'
               " /dev/null \
               | stdbuf -oL -eL tee -a sessions.log
 
-              exit_code=${PIPESTATUS[0]}
+              exit_code="${PIPESTATUS[0]}"
 
               echo "────────────────────────"
               echo "EXIT CODE = $exit_code"
 
               echo "$id" > .rshell_state
 
-              git add sessions.log .rshell_state session/env session/cwd
-              git commit -m "exec $id [skip ci]" || true
-              git push || true
+              # ✅ fail-proof git ops
+              git add sessions.log .rshell_state session/env session/cwd 2>/dev/null || true
+              git commit -m "exec $id [skip ci]" >/dev/null 2>&1 || true
+              git push >/dev/null 2>&1 || true
 
+              true  # نرم‌کننده نهایی
             done
 
             sleep 0.4
-
           done
