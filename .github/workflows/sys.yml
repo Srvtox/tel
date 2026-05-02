@@ -1,140 +1,201 @@
-name: Remote Terminal ULTRAOPS v13.9 ENTERPRISE STABLE
+name: Remote Terminal ULTRAOPS v14.0 ENTERPRISE MEGA-CORE
 
 on:
   workflow_dispatch:
-  push:
-    paths:
-      - 'commands.txt'
+  # push: # این بخش را کامنت می‌کنیم تا از لوپ بی‌پایان جلوگیری شود
+  #   paths:
+  #     - 'commands.txt'
 
 jobs:
   remote-terminal:
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 150 # زمان بیشتر برای اطمینان
 
     steps:
-      - name: Checkout
+      - name: Checkout Code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 0 # دریافت تاریخچه کامل برای مدیریت صحیح git
 
-      - name: Setup runtime directories
+      - name: Setup Environment & Directories
+        id: setup
         run: |
           set -e
-          mkdir -p runtime
-          touch runtime/cwd.txt
-          touch runtime/env.json
-          touch runtime/history
-          touch sessions.log
-          # اگر cwd خالی بود، مسیر جاری رو وارد کن
-          if [ ! -s runtime/cwd.txt ]; then
-            pwd > runtime/cwd.txt
-          fi
+          # ایجاد مسیرهای مورد نیاز
+          mkdir -p /tmp/runtime /tmp/actions_logs
+          touch /tmp/runtime/cwd.txt
+          touch /tmp/runtime/env.json
+          touch /tmp/runtime/history
+          touch /tmp/actions_logs/session.log
+          touch /tmp/commands.txt # فایل دستورات در مسیر موقت
 
-      - name: Run dedicated remote terminal loop
+          # تنظیم مسیر جاری به عنوان مسیر پیش‌فرض
+          echo "$(pwd)" > /tmp/runtime/cwd.txt
+          echo "✅ Environment setup complete."
+
+      - name: Run Robust Remote Terminal Loop
         shell: bash
         run: |
-          set +e
+          # فعال کردن bash strict mode
+          set -euo pipefail
 
+          # تنظیم متغیرهای محیطی
           REPO_DIR="$(pwd)"
-          RUNTIME_DIR="$REPO_DIR/runtime"
-          COMMANDS_FILE="$REPO_DIR/commands.txt"
-          SESSION_LOG="$REPO_DIR/sessions.log"
+          RUNTIME_DIR="/tmp/runtime" # استفاده از مسیر موقت
+          COMMANDS_FILE="/tmp/commands.txt" # استفاده از مسیر موقت
+          SESSION_LOG="/tmp/actions_logs/session.log" # استفاده از مسیر موقت
           CWD_FILE="$RUNTIME_DIR/cwd.txt"
           ENV_FILE="$RUNTIME_DIR/env.json"
           HISTORY_FILE="$RUNTIME_DIR/history"
 
-          mkdir -p "$RUNTIME_DIR"
+          # ایجاد فایل‌های لازم در مسیر موقت
           touch "$COMMANDS_FILE" "$SESSION_LOG" "$CWD_FILE" "$ENV_FILE" "$HISTORY_FILE"
 
-          echo "🚀 شروع ULTRAOPS Remote Terminal (Fail-Safe)"
-          echo "منطقه کاری: $REPO_DIR"
-          echo "فایل دستورات: $COMMANDS_FILE"
-          echo "شاخه runtime: $RUNTIME_DIR"
+          echo "🚀 شروع ULTRAOPS v14.0 MEGA-CORE Remote Terminal..."
+          echo "Working Directory: $REPO_DIR"
+          echo "Commands Queue: $COMMANDS_FILE"
+          echo "Runtime State: $RUNTIME_DIR"
           echo "─────────────────────────────────────────────"
 
-          # تابع امن برای pull کردن آخرین تغییرات
+          # تابع امن برای pull کردن آخرین تغییرات با rebase
           safe_pull() {
-            git pull --rebase origin "$(git rev-parse --abbrev-ref HEAD)" -q || true
+            echo "🔄 در حال همگام‌سازی با مخزن..."
+            git pull --rebase origin "$(git rev-parse --abbrev-ref HEAD)" -q || {
+              echo "⚠️ هشدار: Git pull ناموفق بود. ادامه با وضعیت فعلی."
+              return 1 # بازگرداندن کد خطا
+            }
+            echo "✅ مخزن همگام‌سازی شد."
+            return 0
           }
 
-          # تابع امن برای commit و push
+          # تابع امن برای commit و push وضعیت runtime
           safe_push() {
-            cd "$REPO_DIR"
-            if ! git diff --quiet || ! git diff --cached --quiet; then
-              git add runtime sessions.log commands.txt 2>/dev/null || true
-              git commit -m "ULTRAOPS: sync runtime and queue" -q || true
-              git push origin "$(git rev-parse --abbrev-ref HEAD)" -q || true
+            # بررسی اینکه آیا تغییری وجود دارد یا نه
+            if git diff --quiet HEAD -- || git diff --cached --quiet HEAD --; then
+              echo "ℹ️ هیچ تغییری برای push کردن وجود ندارد."
+              return
             fi
+
+            echo "💾 ذخیره وضعیت runtime و ارسال به مخزن..."
+            git add . || true # اضافه کردن تمام فایل‌های تغییر یافته (runtime, logs, commands.txt)
+            GIT_COMMIT_MSG="ULTRAOPS v14.0: Auto-sync $(date '+%Y-%m-%d %H:%M:%S')"
+            if ! git commit -m "$GIT_COMMIT_MSG" -q --allow-empty; then
+               echo "⚠️ هشدار: Commit ناموفق بود."
+               return 1
+            fi
+
+            # استفاده از force-with-lease برای جلوگیری از بازنویسی تاریخچه دیگران
+            if ! git push --force-with-lease origin "$(git rev-parse --abbrev-ref HEAD)" -q; then
+              echo "❌ خطا: Push ناموفق بود! ممکن است مخزن راه دور تغییر کرده باشد."
+              echo "لطفاً دوباره \"safe_pull\" را اجرا کنید."
+              return 1
+            fi
+            echo "✅ وضعیت runtime با موفقیت ذخیره و push شد."
+            return 0
           }
 
-          # دریافت مسیر جاری
+          # دریافت مسیر کاری فعلی (Current Working Directory)
           get_cwd() {
             if [ -s "$CWD_FILE" ] && [ -d "$(cat "$CWD_FILE")" ]; then
               cat "$CWD_FILE"
             else
-              echo "$REPO_DIR"
+              echo "$REPO_DIR" # بازگشت به مسیر اصلی ریپو اگر فایل cwd معتبر نباشد
             fi
           }
 
-          # تنظیم مسیر جاری
+          # تنظیم مسیر کاری فعلی
           set_cwd() {
-            echo "$1" > "$CWD_FILE"
+            local target_dir="$1"
+            # اطمینان از اینکه دایرکتوری وجود دارد
+            if [ -d "$target_dir" ]; then
+              echo "$target_dir" > "$CWD_FILE"
+            else
+              echo "⚠️ هشدار: دایرکتوری '$target_dir' وجود ندارد. مسیر کاری تغییر نکرد." | tee -a "$SESSION_LOG"
+            fi
           }
 
-          # اجرای یک فرمان بوسیله PTY واقعی و timeout
+          # اجرای فرمان با مدیریت PTY و timeout
           run_command() {
-            local cmd="$1"
+            local cmd_raw="$1"
             local workdir
             workdir="$(get_cwd)"
+            local cmd_uuid=$(uuidgen) # تولید یک شناسه منحصر به فرد برای هر اجرا
 
-            echo "🔹 اجرا => $cmd"
-            echo "🔹 اجرا => $cmd" | tee -a "$SESSION_LOG"
+            echo "▶️ اجرا (ID: $cmd_uuid): $cmd_raw" | tee -a "$SESSION_LOG"
+            echo "   در مسیر: $workdir" | tee -a "$SESSION_LOG"
             echo "────────────────────────" | tee -a "$SESSION_LOG"
 
-            # اصلاح دستورات SSH
-            if [[ "$cmd" == ssh* ]]; then
-              cmd="$cmd -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ServerAliveInterval=30 -o ServerAliveCountMax=3"
-            fi
+            local pty_cmd="timeout 600 bash -c 'stty rows 50 cols 200 pass8 -echo -icanon min 1 time 5; trap \"\" INT TSTP; exec \"$cmd_raw\"'"
 
-            # دستورات cd را به صورت سومی مدیریت می‌کند
-            if [[ "$cmd" == cd* ]]; then
-              local target="${cmd#cd }"
-              target="${target:-$REPO_DIR}"
-              if [ -d "$target" ]; then
-                (cd "$workdir" && cd "$target" && pwd) > "$CWD_FILE"
-                echo "حالت فعلی: $(cat "$CWD_FILE")" | tee -a "$SESSION_LOG"
+            # مدیریت خاص دستورات cd
+            if [[ "$cmd_raw" == cd* ]]; then
+              local target_path="${cmd_raw#cd }"
+              target_path="${target_path:-$REPO_DIR}" # اگر خالی بود، به مسیر اصلی برو
+              local new_abs_path
+              # استفاده از `cd ... && pwd` برای به دست آوردن مسیر مطلق درست
+              new_abs_path=$(cd "$workdir" && cd "$target_path" && pwd)
+              if [ -d "$new_abs_path" ]; then
+                set_cwd "$new_abs_path"
+                echo "✅ تغییر مسیر به: $new_abs_path" | tee -a "$SESSION_LOG"
               else
-                echo "خطا: شاخه پیدا نشد - $target" | tee -a "$SESSION_LOG"
+                echo "❌ خطا: مسیر '$target_path' معتبر نیست." | tee -a "$SESSION_LOG"
               fi
+              # حذف دستور cd از فایل دستورات
+              sed -i '1d' "$COMMANDS_FILE"
+              safe_push # ذخیره تغییر مسیر
               return
             fi
 
-            # اجرای فرمان و جمع‌آوری خروجی
+            # اجرای فرمان واقعی و ثبت خروجی
             {
-              cd "$workdir" && eval "$cmd" 2>&1
+              cd "$workdir" && eval "$pty_cmd" 2>&1
             } | tee -a "$SESSION_LOG"
+            
+            local exit_code=$?
+            echo "────────────────────────" | tee -a "$SESSION_LOG"
+            echo "🏁 دستور (ID: $cmd_uuid) به پایان رسید با کد خروجی: $exit_code" | tee -a "$SESSION_LOG"
             echo "────────────────────────" | tee -a "$SESSION_LOG"
 
             # حذف خط اول (دستور اجرا شده) از فایل دستورات
             sed -i '1d' "$COMMANDS_FILE"
-            echo "✅ دستور اجرا شد و از صف حذف شد."
             
-            # بروزرسانی وضعیت runtime
+            # اگر خطا رخ داد، لاگ را کامل‌تر نگه داریم
+            if [ $exit_code -ne 0 ]; then
+              echo "⚠️ هشدار: دستور با خطا ($exit_code) اجرا شد." | tee -a "$SESSION_LOG"
+            fi
+
+            # ارسال وضعیت به مخزن
             safe_push
           }
 
-          # حلقه اصلی
+          # پاکسازی اولیه لاگ‌ها
+          > "$SESSION_LOG" # خالی کردن فایل لاگ در شروع
+
+          # حلقه اصلی اجرای دستورات
           while true; do
+            # اطمینان از دریافت آخرین تغییرات قبل از بررسی صف
             safe_pull
 
-            # اگر دستوری در صف بود، اجرا کن
+            # بررسی وجود دستورات در صف
             if [ -s "$COMMANDS_FILE" ]; then
-              # فقط اولی رو اجرا کن
-              first_command=$(head -n 1 "$COMMANDS_FILE" | sed 's/[[:space:]]*$//')
-              run_command "$first_command"
-            else
-              echo "🌙 صف دستورات خالی؛ منتظر..."
-            fi
+              # خواندن اولین دستور بدون فضاهای خالی اضافه
+              first_command_line=$(head -n 1 "$COMMANDS_FILE")
+              # حذف فضاهای خالی در ابتدا و انتهای خط
+              first_command=$(echo "$first_command_line" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
 
-            sleep 2
+              # اگر خط خالی نبود، اجرا کن
+              if [ -n "$first_command" ]; then
+                run_command "$first_command"
+              else
+                # اگر خط خالی بود، آن را حذف کن و دوباره تلاش کن
+                echo "ℹ️ خط خالی در صف دستورات یافت شد. حذف شد." | tee -a "$SESSION_LOG"
+                sed -i '1d' "$COMMANDS_FILE"
+                safe_push # ذخیره حذف خط خالی
+              fi
+            else
+              echo "🌙 صف دستورات خالی است. در حال انتظار..."
+              sleep 15 # مکث بیشتر وقتی صف خالی است
+            fi
+            # جلوگیری از اجرای بیش از حد سریع اگر فایل commands.txt تغییر کند
+            sleep 5
           done
