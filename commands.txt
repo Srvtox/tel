@@ -9,3 +9,4 @@ ex sshg yEgn7MXyuAM4ZvMRqyKP224wP@sfo2.tmate.io
 ex q
 ex ssh yEgn7MXyuAM4ZvMRqyKP224wP@sfo2.tmate.io
 ex test
+ex yes
