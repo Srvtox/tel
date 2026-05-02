@@ -1,15 +1,1 @@
-ex curl ifconfig.me
-ex curl -6 ifconfig.me
-ex ping6 google.com
-ex sudo systemctl status ssh
-ex q
-ex sudo systemctl start ssh
-ex sudo systemctl status ssh
-ex sshg yEgn7MXyuAM4ZvMRqyKP224wP@sfo2.tmate.io
-ex q
-ex ssh yEgn7MXyuAM4ZvMRqyKP224wP@sfo2.tmate.io
-ex test
-ex yes
-ex ssh yEgn7MXyuAM4ZvMRqyKP224wP@sfo2.tmate.io
-ex yes
-ex clear
+
