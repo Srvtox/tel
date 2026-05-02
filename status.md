@@ -1,27 +1,27 @@
 # Terminal Status
 
-Last update: Sat May  2 15:32:43 UTC 2026
+Last update: Sat May  2 15:32:51 UTC 2026
 
 ## Last output
 ```
-runner@runnervmeorf1:~/work/tel/tel$ ssh 3ALCYZAFR5CzZDgfPUKRxeGSw@sfo2.tmate.io
-The authenticity of host 'sfo2.tmate.io (157.230.72.130)' can't be established.
-RSA key fingerprint is SHA256:Hthk2T/M/Ivqfk1YYUn5ijC2Att3+UPzD7Rn72P5VWs.
-This key is not known by any other names.
-Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
-
-Warning: Permanently added 'sfo2.tmate.io' (RSA) to the list of known hosts.
-Connection closed by 157.230.72.130 port 22
-runner@runnervmeorf1:~/work/tel/tel$
-runner@runnervmeorf1:~/work/tel/tel$ curl -fsSL https://pkg.cloudflareclient.com
-/pubkey.gpg \ | sudo gpg --dearmor -o /usr/share/keyrings/cloudflare-warp.gpg
-curl: (3) URL rejected: Malformed input to a URL function
-runner@runnervmeorf1:~/work/tel/tel$
-runner@runnervmeorf1:~/work/tel/tel$ echo "deb [signed-by=/usr/share/keyrings/cl
 oudflare-warp.gpg] https://pkg.cloudflareclient.com/ $(lsb_release -cs) main" \
 | sudo tee /etc/apt/sources.list.d/cloudflare-client.list
 deb [signed-by=/usr/share/keyrings/cloudflare-warp.gpg] https://pkg.cloudflarecl
 ient.com/ noble main
 runner@runnervmeorf1:~/work/tel/tel$
+runner@runnervmeorf1:~/work/tel/tel$ sudo apt-get update
+
+Get:1 file:/etc/apt/apt-mirrors.txt Mirrorlist [144 B]
+Hit:2 http://azure.archive.ubuntu.com/ubuntu noble InRelease
+Hit:3 http://azure.archive.ubuntu.com/ubuntu noble-updates InRelease
+Hit:4 http://azure.archive.ubuntu.com/ubuntu noble-backports InRelease
+Hit:6 https://packages.microsoft.com/repos/azure-cli noble InRelease
+Hit:5 http://azure.archive.ubuntu.com/ubuntu noble-security InRelease
+Hit:7 https://packages.microsoft.com/ubuntu/24.04/prod noble InRelease
+Hit:8 https://dl.google.com/linux/chrome-stable/deb stable InRelease
+Get:9 https://pkg.cloudflareclient.com noble InRelease [2567 B]
+Get:10 https://pkg.cloudflareclient.com noble/main amd64 Packages [457 B]
+Fetched 3024 B in 1s (5903 B/s)
+Reading package lists... Done
 runner@runnervmeorf1:~/work/tel/tel$
 ```
