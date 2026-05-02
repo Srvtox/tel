@@ -1,9 +1,6 @@
-🔵 EXEC ID=5 : ex q
-🖥 Command: q
+🔵 EXEC ID=6 : ex sudo systemctl start ssh
+🖥 Command: sudo systemctl start ssh
 --------------------------------
-○ ssh.service - OpenBSD Secure Shell server
-     Loaded: loaded (/usr/lib/systemd/system/ssh.service; disabled; preset: ena>
-     Active: inactive (dead)
 TriggeredBy: ● ssh.socket
        Docs: man:sshd(8)
              man:sshd_config(5)
@@ -24,6 +21,9 @@ TriggeredBy: ● ssh.socket
 ~
 ~
 ~
+runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
+runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
+runner@runnervmeorf1:~/work/tel/tel$ sudo systemctl start ssh
 runner@runnervmeorf1:~/work/tel/tel$
 --------------------------------
-2026-05-02T08:29:01Z | ID=5 | EXIT=0
+2026-05-02T08:30:30Z | ID=6 | EXIT=0
