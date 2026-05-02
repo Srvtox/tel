@@ -1,1 +1,2 @@
 ex curl ifconfig.me
+ex curl -6 ifconfig.me
