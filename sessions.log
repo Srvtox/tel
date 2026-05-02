@@ -1,11 +1,6 @@
-🔵 EXEC ID=7 : ex sudo systemctl status ssh
-🖥 Command: sudo systemctl status ssh
+🔵 EXEC ID=8 : ex sshg yEgn7MXyuAM4ZvMRqyKP224wP@sfo2.tmate.io
+🖥 Command: sshg yEgn7MXyuAM4ZvMRqyKP224wP@sfo2.tmate.io
 --------------------------------
-runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
-runner@runnervmeorf1:~/work/tel/tel$ sudo systemctl start ssh
-runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
-runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
-runner@runnervmeorf1:~/work/tel/tel$ sudo systemctl status ssh
 ● ssh.service - OpenBSD Secure Shell server
      Loaded: loaded (/usr/lib/systemd/system/ssh.service; disabled; preset: ena>
      Active: active (running) since Sat 2026-05-02 08:30:30 UTC; 1s ago
@@ -24,6 +19,11 @@ May 02 08:30:30 runnervmeorf1 systemd[1]: Starting ssh.service - OpenBSD Secure>
 May 02 08:30:30 runnervmeorf1 sshd[36595]: Server listening on 0.0.0.0 port 22.
 May 02 08:30:30 runnervmeorf1 sshd[36595]: Server listening on :: port 22.
 May 02 08:30:30 runnervmeorf1 systemd[1]: Started ssh.service - OpenBSD Secure >
-lines 1-18/18 (END)
+~
+~
+~
+~
+~
+log file support is not available  (press RETURN)
 --------------------------------
-2026-05-02T08:30:31Z | ID=7 | EXIT=0
+2026-05-02T08:37:24Z | ID=8 | EXIT=0
