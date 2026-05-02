@@ -1,11 +1,10 @@
-name: Remote Shell 12.2 TRUE REALTIME WITH AUTO-PULL
+name: Remote Shell 12.3 TRUE REALTIME TERMINAL
 
 on:
   workflow_dispatch:
 
 permissions:
   contents: write
-  actions: write
 
 jobs:
   shell:
@@ -13,116 +12,85 @@ jobs:
     timeout-minutes: 350
 
     steps:
-      - name: Checkout repo
+      - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Setup environment
+      - name: Prepare system
         run: |
           sudo apt-get update
-          sudo apt-get install -y expect util-linux
+          sudo apt-get install -y util-linux expect coreutils
 
           mkdir -p session
           : > sessions.log
           : > commands.txt
-          echo 0 > .rshell_state
-          echo "# env" > session/env
-          pwd > session/cwd
 
-      - name: Start TRUE REALTIME Shell
+          echo 0 > .rshell_state
+          pwd > session/cwd
+          echo "#env" > session/env
+
+      - name: Start realtime terminal
         shell: bash
         run: |
-          set -Eeuo pipefail
-          echo "🔥 Remote Shell 12.2 TRUE REALTIME WITH AUTO-PULL Started"
 
-          while true; do
+          set -uo pipefail   # بدون -e → با خطا متوقف نشود
 
-            # ********** THE MAGIC FIX **********
+          echo "🚀 Remote Shell 12.3 TERMINAL MODE"
+
+          while true
+          do
+
+            # همیشه آخرین commands.txt را بگیر
             git fetch --all
             git reset --hard origin/main
-            # ************************************
 
-            last_id=$(cat .rshell_state)
-            current_id=0
+            last=$(cat .rshell_state)
+            id=0
 
             mapfile -t lines < commands.txt || true
-            line_count="${#lines[@]}"
 
-            if (( line_count == 0 )); then
-              sleep 0.5
-              continue
-            fi
+            for cmd in "${lines[@]}"
+            do
 
-            for line in "${lines[@]}"; do
-              current_id=$((current_id+1))
+              id=$((id+1))
 
-              if (( current_id <= last_id )); then
+              if (( id <= last ))
+              then
                 continue
               fi
 
-              clean_line="$(echo "$line" | sed 's/^[[:space:]]*//')"
-              [[ -z "$clean_line" ]] && continue
-              [[ "$clean_line" =~ ^# ]] && continue
-
-              ts=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+              cmd=$(echo "$cmd" | sed 's/^[[:space:]]*//')
+              [[ -z "$cmd" ]] && continue
+              [[ "$cmd" =~ ^# ]] && continue
 
               echo ""
-              echo "🔵 EXEC $current_id :: '$clean_line'"
-              echo "────────────────────────────────────────────"
+              echo "🟢 EXEC $id :: $cmd"
+              echo "────────────────────────"
 
-              SAFE_CMD="$clean_line"
+              cwd=$(cat session/cwd)
 
-              if [[ "$SAFE_CMD" =~ ^export[[:space:]]+ ]]; then
-                var=$(echo "$SAFE_CMD" | sed -E 's/export[[:space:]]+([A-Za-z_][A-Za-z0-9_]*).*/\1/')
-                grep -v "^export $var=" session/env > env.tmp || true
-                echo "$SAFE_CMD" >> env.tmp
-                mv env.tmp session/env
-                echo "Env updated."
-                exit_code=0
+              # اجرای دستور داخل PTY واقعی
+              script -q -c "
+                cd \"$cwd\"
+                source session/env 2>/dev/null
+                bash -ic '$cmd'
+              " /dev/null \
+              | stdbuf -oL -eL tee -a sessions.log
 
-              elif [[ "$SAFE_CMD" =~ ^cd[[:space:]]+ ]]; then
-                target="${SAFE_CMD#cd }"
-                if cd "$target" 2>/dev/null; then
-                  pwd > session/cwd
-                  echo "Directory changed to $(cat session/cwd)"
-                  exit_code=0
-                else
-                  echo "❌ cd failed"
-                  exit_code=1
-                fi
+              exit_code=${PIPESTATUS[0]}
 
-              elif [[ "$SAFE_CMD" =~ ^ex[[:space:]]+ ]]; then
-                realcmd="${SAFE_CMD#ex }"
+              echo "────────────────────────"
+              echo "EXIT CODE = $exit_code"
 
-                if [[ "$realcmd" =~ ^apt[[:space:]]+install ]]; then
-                  realcmd="sudo DEBIAN_FRONTEND=noninteractive apt-get install -y ${realcmd#apt install }"
-                elif [[ "$realcmd" =~ ^apt[[:space:]]+update ]]; then
-                  realcmd="sudo apt-get update"
-                elif [[ "$realcmd" =~ ^apt[[:space:]]+upgrade ]]; then
-                  realcmd="sudo DEBIAN_FRONTEND=noninteractive apt-get upgrade -y"
-                fi
-
-                script -q -c "cd \"$(cat session/cwd)\"; source session/env 2>/dev/null; $realcmd" /dev/null \
-                    | tee -a sessions.log
-                exit_code=${PIPESTATUS[0]}
-
-              else
-                script -q -c "cd \"$(cat session/cwd)\"; source session/env 2>/dev/null; $SAFE_CMD" /dev/null \
-                    | tee -a sessions.log
-                exit_code=${PIPESTATUS[0]}
-              fi
-
-              echo "────────────────────────────────────────────"
-              echo "$ts | ID=$current_id | EXIT=$exit_code"
-
-              echo "$current_id" > .rshell_state
+              echo "$id" > .rshell_state
 
               git add sessions.log .rshell_state session/env session/cwd
-              git commit -m "exec $current_id [skip ci]" || true
+              git commit -m "exec $id [skip ci]" || true
               git push || true
 
             done
 
             sleep 0.4
+
           done
