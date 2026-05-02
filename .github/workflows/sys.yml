@@ -84,8 +84,9 @@ jobs:
             echo "────────────────────────"
 
             # ✅ اجرای واقعی با PTY صحیح
-            script -q -e -c "cd \"$cwd\" && source session/env 2>/dev/null && exec bash -ic \"$cmd\"" /dev/null \
+            script -q -e -c "cd \"$cwd\"; source session/env 2>/dev/null; bash -ic \"$cmd\"" /dev/null \
             | stdbuf -oL -eL tee -a sessions.log
+
 
             exit_code=${PIPESTATUS[0]}
 
