@@ -1,4 +1,4 @@
-name: Remote Shell ULTRAOPS v13.2 INTERACTIVE
+name: Remote Shell ULTRAOPS v13.1 STABLE
 
 on:
   workflow_dispatch:
@@ -7,7 +7,7 @@ permissions:
   contents: write
 
 jobs:
-  interactive-shell:
+  intelligent-shell:
     runs-on: ubuntu-latest
     timeout-minutes: 358
 
@@ -25,7 +25,8 @@ jobs:
       - name: Prepare system
         run: |
           sudo apt-get update
-          sudo apt-get install -y coreutils util-linux
+          sudo apt-get install -y util-linux coreutils
+
           mkdir -p session
           touch sessions.log
           touch session/cwd session/env
@@ -34,11 +35,14 @@ jobs:
           [ -f session/env ] || echo "#env" > session/env
           [ -f session/cwd ] || pwd > session/cwd
 
-      - name: Start Interactive Loop
+      - name: Start realtime queue shell (Updated v13.1)
         shell: bash
         run: |
 
-          echo "🤖 Remote Queue Shell INTERACTIVE v13.2 STARTED"
+          set +e
+          set -o pipefail
+
+          echo "🤖 Remote Queue Shell READY (Updated v13.1)"
 
           dequeue() {
             tail -n +2 commands.txt > .tmp && mv .tmp commands.txt
@@ -46,22 +50,27 @@ jobs:
 
           commit_push() {
             git add commands.txt sessions.log session/env session/cwd 2>/dev/null || true
-            git commit -m "ops update [skip ci]" --allow-empty >/dev/null 2>&1 || true
+            git commit -m "ops update [skip ci]" >/dev/null 2>&1 || true
             git pull --rebase --quiet || true
             git push --quiet || true
           }
 
           while true; do
-            git fetch -q
-            git reset --hard origin/main >/dev/null 2>&1 || true
 
+            # ✅ همگام‌سازی امن بدون پاک کردن session
+            git fetch -q
+            git pull --rebase --autostash --quiet || true
+
+            # ✅ اگر صف خالی است
             if [ ! -s commands.txt ]; then
               sleep 1
               continue
             fi
 
+            # ✅ خواندن اولین دستور
             cmd=$(head -n 1 commands.txt | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
 
+            # ✅ حذف دستورات خالی یا کامنت
             if [[ "$cmd" == "" ]] || [[ "$cmd" == \#* ]]; then
               dequeue
               commit_push
@@ -69,55 +78,39 @@ jobs:
             fi
 
             cwd=$(cat session/cwd)
+
             echo ""
             echo "🟢 EXEC: $cmd"
             echo "────────────────────────"
 
-            # اگر دستور ssh است و پارامترهای امنیتی ندارد، اضافه کن
-            if [[ "$cmd" == ssh* ]] && [[ ! "$cmd" =~ "-o StrictHostKeyChecking=no" ]] && [[ ! "$cmd" =~ "-o UserKnownHostsFile=/dev/null" ]]; then
-              cmd="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${cmd#ssh }"
-              echo "ℹ️ INFO: Added SSH security options."
-            fi
+            # ✅ اجرای واقعی با PTY صحیح
+            script -q -e -c "cd \"$cwd\" && source session/env 2>/dev/null && exec bash -ic \"$cmd\"" /dev/null \
+            | stdbuf -oL -eL tee -a sessions.log
 
-            # --- اجرای دستور به صورت interactive با TTY ---
-            # برای اینکه خطای دستور workflow رو متوقف نکنه:
-            # set +e باعث میشه حتی اگر دستور داخل script fail کرد، حلقه ادامه بده.
-            set +e
-
-            if command -v script &> /dev/null; then
-              # نکته: از -e استفاده نمی‌کنیم تا script با اولین خطا "سختگیرانه" exit نده.
-              script -q -c "cd \"$cwd\"; source session/env 2>/dev/null; $cmd" /dev/null
-            else
-              bash -c "cd \"$cwd\"; source session/env 2>/dev/null; $cmd"
-            fi
-
-            exit_code=$?
-
-            # برگرداندن حالت به شکل پیش‌فرض قدم بعدی (اختیاری ولی تمیز)
-            set -e 2>/dev/null || true
+            exit_code=${PIPESTATUS[0]}
 
             echo "────────────────────────"
             echo "Exit code ➜ $exit_code"
 
-            if [ "$exit_code" -ne 0 ]; then
-              echo "⚠️ خطا داشتیم، ولی ادامه می‌دیم (workflow بسته نمی‌شه)."
-            fi
-
-            # مدیریت تغییر مسیر cd
+            # ✅ مدیریت cd
             if [[ "$cmd" =~ ^cd[[:space:]]+(.+) ]]; then
-              new_cwd=$(bash -c "cd \"$cwd\"; ${cmd}; pwd" 2>/dev/null)
-              if [ -d "$new_cwd" ]; then
-                echo "$new_cwd" > session/cwd
-              else
-                echo "⚠️ WARNING: 'cd' command failed or invalid directory."
+              new_dir="${BASH_REMATCH[1]}"
+              if [ -d "$new_dir" ]; then
+                cd "$new_dir"
+                pwd > session/cwd
               fi
             fi
 
-            # حذف دستور از صف
+            # ✅ مدیریت export
+            if [[ "$cmd" =~ ^export[[:space:]]+ ]]; then
+              echo "$cmd" >> session/env
+            fi
+
+            # ✅ حذف از صف
             dequeue
 
-            # ارسال تغییرات به گیت
+            # ✅ ذخیره تغییرات
             commit_push
 
-            sleep 2
+            sleep 1
           done
