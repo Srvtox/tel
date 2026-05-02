@@ -80,20 +80,28 @@ jobs:
             fi
 
             # --- اجرای دستور به صورت interactive با TTY ---
-            # اینجا با استفاده از `script` اجرا می‌کنیم تا محیط تعاملی واقعی حفظ شود.
+            # برای اینکه خطای دستور workflow رو متوقف نکنه:
+            # set +e باعث میشه حتی اگر دستور داخل script fail کرد، حلقه ادامه بده.
+            set +e
 
-            # اول بررسی می‌کنیم که ابزار script موجود است، در غیر این صورت fallback به bash
             if command -v script &> /dev/null; then
-              script -q -e -c "cd \"$cwd\"; source session/env 2>/dev/null; $cmd" /dev/null
+              # نکته: از -e استفاده نمی‌کنیم تا script با اولین خطا "سختگیرانه" exit نده.
+              script -q -c "cd \"$cwd\"; source session/env 2>/dev/null; $cmd" /dev/null
             else
-              # اگر script نبود، فقط اجرای عادی در حالت تداخل نداشته
               bash -c "cd \"$cwd\"; source session/env 2>/dev/null; $cmd"
             fi
 
             exit_code=$?
 
+            # برگرداندن حالت به شکل پیش‌فرض قدم بعدی (اختیاری ولی تمیز)
+            set -e 2>/dev/null || true
+
             echo "────────────────────────"
             echo "Exit code ➜ $exit_code"
+
+            if [ "$exit_code" -ne 0 ]; then
+              echo "⚠️ خطا داشتیم، ولی ادامه می‌دیم (workflow بسته نمی‌شه)."
+            fi
 
             # مدیریت تغییر مسیر cd
             if [[ "$cmd" =~ ^cd[[:space:]]+(.+) ]]; then
