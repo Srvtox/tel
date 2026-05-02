@@ -5,3 +5,4 @@ echo "deb [signed-by=/usr/share/keyrings/cloudflare-warp.gpg] https://pkg.cloudf
 sudo apt-get update
 sudo apt-get install -y cloudflare-warp
 sudo warp-cli --accept-tos registration new || true
+sudo warp-cli --accept-tos connect || true
