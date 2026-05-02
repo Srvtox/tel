@@ -1,4 +1,4 @@
-name: Remote Shell 12 TRUE REALTIME
+name: Remote Shell 12.1 TRUE REALTIME FIXED
 
 on:
   workflow_dispatch:
@@ -18,14 +18,14 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup
+      - name: Setup environment
         run: |
           sudo apt-get update
-          sudo apt-get install -y expect bash coreutils util-linux
+          sudo apt-get install -y expect util-linux
+
           mkdir -p session
           : > commands.txt
           : > sessions.log
-          : > .rshell_state
           echo 0 > .rshell_state
           echo "# env" > session/env
           pwd > session/cwd
@@ -34,39 +34,45 @@ jobs:
         shell: bash
         run: |
           set -Eeuo pipefail
-          echo "🔥 Remote Shell 12 TRUE REALTIME Started"
-
-          iter=0
+          echo "🔥 Remote Shell 12.1 TRUE REALTIME FIXED Started"
 
           while true; do
-            iter=$((iter+1))
-
             last_id=$(cat .rshell_state)
-            count=0
+            current_id=0
 
-            # main reader
-            while IFS= read -r line || [ -n "$line" ]; do
-              count=$((count+1))
-              id=$count
+            # مانیتور کردن فایل commands.txt — مهم!
+            mapfile -t lines < commands.txt || true
+            line_count="${#lines[@]}"
 
-              if [[ "$id" -le "$last_id" ]]; then
+            if (( line_count == 0 )); then
+              sleep 0.5
+              continue
+            fi
+
+            for line in "${lines[@]}"; do
+              current_id=$((current_id+1))
+
+              # skip processed
+              if (( current_id <= last_id )); then
                 continue
               fi
 
-              # empty / comments
-              [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]] && continue
+              clean_line="$(echo "$line" | sed 's/^[[:space:]]*//')"
+              [[ -z "$clean_line" ]] && continue
+              [[ "$clean_line" =~ ^# ]] && continue
 
-              echo "🔵 EXEC $id: $line"
-              echo "----------------------------------------------"
+              ts=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+              echo ""
+              echo "🔵 EXEC $current_id :: '$clean_line'"
+              echo "────────────────────────────────────────────"
 
               # reset log
               : > sessions.log
 
-              ts=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+              SAFE_CMD="$clean_line"
 
-              SAFE_CMD="$line"
-
-              # ENV handling
+              # handle EXPORT
               if [[ "$SAFE_CMD" =~ ^export[[:space:]]+ ]]; then
                 var=$(echo "$SAFE_CMD" | sed -E 's/export[[:space:]]+([A-Za-z_][A-Za-z0-9_]*).*/\1/')
                 grep -v "^export $var=" session/env > env.tmp || true
@@ -75,7 +81,7 @@ jobs:
                 echo "Env updated."
                 exit_code=0
 
-              # CD handling
+              # handle CD
               elif [[ "$SAFE_CMD" =~ ^cd[[:space:]]+ ]]; then
                 target="${SAFE_CMD#cd }"
                 if cd "$target" 2>/dev/null; then
@@ -87,11 +93,11 @@ jobs:
                   exit_code=1
                 fi
 
-              # REAL COMMANDS: EXECUTE WITH TRUE REALTIME PTY
+              # EXECUTE REAL COMMAND INSIDE TRUE PTY
               elif [[ "$SAFE_CMD" =~ ^ex[[:space:]]+ ]]; then
                 realcmd="${SAFE_CMD#ex }"
 
-                # safety transformer
+                # safety apt transforms
                 if [[ "$realcmd" =~ ^apt[[:space:]]+install ]]; then
                   realcmd="sudo DEBIAN_FRONTEND=noninteractive apt-get install -y ${realcmd#apt install }"
                 elif [[ "$realcmd" =~ ^apt[[:space:]]+update ]]; then
@@ -100,30 +106,29 @@ jobs:
                   realcmd="sudo DEBIAN_FRONTEND=noninteractive apt-get upgrade -y"
                 fi
 
-                echo "▶ Running: $realcmd"
+                echo "▶ Running command: $realcmd"
 
-                # -------------------------
-                # 🎯 **THIS IS THE MAGIC**
-                # اجرای دستور داخل PTY واقعی و استریم مستقیم به اکشن
-                # -------------------------
-                script -q -c "cd \"$(cat session/cwd)\"; source session/env 2>/dev/null; $realcmd" /dev/null | tee -a sessions.log
+                # MAGIC REALTIME PTY EXECUTION
+                script -q -c "cd \"$(cat session/cwd)\"; source session/env 2>/dev/null; $realcmd" /dev/null \
+                    | tee -a sessions.log
                 exit_code=${PIPESTATUS[0]}
 
+              # NORMAL COMMANDS
               else
-                # normal non-ex commands
-                script -q -c "cd \"$(cat session/cwd)\"; source session/env 2>/dev/null; $SAFE_CMD" /dev/null | tee -a sessions.log
+                script -q -c "cd \"$(cat session/cwd)\"; source session/env 2>/dev/null; $SAFE_CMD" /dev/null \
+                    | tee -a sessions.log
                 exit_code=${PIPESTATUS[0]}
               fi
 
-              echo "----------------------------------------------"
-              echo "$ts | ID=$id | EXIT=$exit_code"
-              echo "$id" > .rshell_state
+              echo "────────────────────────────────────────────"
+              echo "$ts | ID=$current_id | EXIT=$exit_code"
 
+              echo "$current_id" > .rshell_state
               git add sessions.log .rshell_state session/env session/cwd
-              git commit -m "exec $id [skip ci]" || true
+              git commit -m "exec $current_id [skip ci]" || true
               git push || true
 
-            done < commands.txt
+            done
 
             sleep 0.4
           done
