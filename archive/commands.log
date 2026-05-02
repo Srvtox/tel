@@ -1,2 +1,3 @@
 ssh 3ALCYZAFR5CzZDgfPUKRxeGSw@sfo2.tmate.io
 yes
+curl -fsSL https://pkg.cloudflareclient.com/pubkey.gpg \ | sudo gpg --dearmor -o /usr/share/keyrings/cloudflare-warp.gpg
