@@ -1,29 +1,29 @@
-🔵 EXEC ID=13 : ex ssh yEgn7MXyuAM4ZvMRqyKP224wP@sfo2.tmate.io
-🖥 Command: ssh yEgn7MXyuAM4ZvMRqyKP224wP@sfo2.tmate.io
+🔵 EXEC ID=14 : ex yes
+🖥 Command: yes
 --------------------------------
-~
-~
-~
-~
-~
-runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
-runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
-runner@runnervmeorf1:~/work/tel/tel$ ssh yEgn7MXyuAM4ZvMRqyKP224wP@sfo2.tmate.io
-The authenticity of host 'sfo2.tmate.io (157.230.72.130)' can't be established.
-RSA key fingerprint is SHA256:Hthk2T/M/Ivqfk1YYUn5ijC2Att3+UPzD7Rn72P5VWs.
-This key is not known by any other names.
-Are you sure you want to continue connecting (yes/no/[fingerprint])? cd /home/ru
-nner/work/tel/tel
-Please type 'yes', 'no' or the fingerprint: source session/env 2>/dev/null
-Please type 'yes', 'no' or the fingerprint: test
-Please type 'yes', 'no' or the fingerprint: cd /home/runner/work/tel/tel
-Please type 'yes', 'no' or the fingerprint: source session/env 2>/dev/null
-Please type 'yes', 'no' or the fingerprint: yes
-Warning: Permanently added 'sfo2.tmate.io' (RSA) to the list of known hosts.
-Connection closed by 157.230.72.130 port 22
-runner@runnervmeorf1:~/work/tel/tel$ cd /home/runner/work/tel/tel
-runner@runnervmeorf1:~/work/tel/tel$ source session/env 2>/dev/null
-runner@runnervmeorf1:~/work/tel/tel$ ssh yEgn7MXyuAM4ZvMRqyKP224wP@sfo2.tmate.io
+y
+y
+y
+y
+y
+y
+y
+y
+y
+y
+y
+y
+y
+y
+y
+y
+y
+y
+y
+y
+y
+y
+y
 
 --------------------------------
-2026-05-02T08:41:59Z | ID=13 | EXIT=0
+2026-05-02T08:42:48Z | ID=14 | EXIT=0
