@@ -1,13 +1,16 @@
-name: Remote Queue Shell
+name: Remote Shell Engine PRO MAX
 
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - commands.txt
 
 permissions:
   contents: write
 
 jobs:
-  shell:
+  runner:
     runs-on: ubuntu-latest
     timeout-minutes: 350
 
@@ -17,49 +20,72 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup git
-        run: |
-          git config --global user.name "github-actions"
-          git config --global user.email "github-actions@github.com"
-
-      - name: Prepare environment
+      - name: Prepare Environment
         run: |
           sudo apt-get update -y
-          sudo apt-get install -y util-linux coreutils timeout
+          sudo apt-get install -y tmux screen expect util-linux coreutils jq openssh-client
 
-          mkdir -p session
+          mkdir -p runtime
+          touch runtime/env.json
+          touch runtime/cwd.txt
+          touch runtime/history
           touch sessions.log
+
+          echo "$HOME" > runtime/cwd.txt
+
           [ -f commands.txt ] || touch commands.txt
 
-      - name: Start remote queue
+      - name: Start PRO MAX Shell Engine
         shell: bash
         run: |
-          echo "🤖 Remote Queue Ready"
+          set +e
+
+          LOG="sessions.log"
+          STATE_ENV="runtime/env.json"
+          STATE_CWD="runtime/cwd.txt"
+          HISTORY="runtime/history"
+
+          save_state() {
+            local exit=$1
+            jq -n \
+              --arg cwd "$(cat $STATE_CWD)" \
+              --argjson exit $exit \
+              '{cwd: $cwd, exit: $exit}' > runtime/last_state.json
+          }
 
           dequeue() {
             tail -n +2 commands.txt > .tmp && mv .tmp commands.txt
           }
 
-          push_repo() {
-            git add commands.txt sessions.log 2>/dev/null || true
-            git commit -m "queue update [skip ci]" >/dev/null 2>&1 || true
+          git_sync() {
+            git add . >/dev/null 2>&1 || true
+            git commit -m "update [skip ci]" >/dev/null 2>&1 || true
             git pull --rebase origin main >/dev/null 2>&1 || true
             git push >/dev/null 2>&1 || true
           }
 
           normalize_cmd() {
-            local raw="$1"
+            local c="$1"
 
-            # اگر دستور با ssh شروع شود، گزینه‌های non-interactive اضافه کن
-            if [[ "$raw" =~ ^ssh[[:space:]]+ ]]; then
-              echo "$raw -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ServerAliveInterval=30 -o ServerAliveCountMax=3"
-            else
-              echo "$raw"
+            if [[ "$c" =~ ^cd[[:space:]]+ ]]; then
+              echo "__CD__ ${c#cd }"
+              return
             fi
+
+            if [[ "$c" =~ ^export[[:space:]]+ ]]; then
+              echo "__EXPORT__ ${c#export }"
+              return
+            fi
+
+            if [[ "$c" =~ ^ssh[[:space:]]+ ]]; then
+              echo "$c -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ServerAliveInterval=15 -o ServerAliveCountMax=3"
+              return
+            fi
+
+            echo "$c"
           }
 
-          while true
-          do
+          while true; do
             git fetch origin main -q
             git reset --hard origin/main -q || true
 
@@ -68,32 +94,48 @@ jobs:
               continue
             fi
 
-            raw_cmd=$(head -n 1 commands.txt | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+            raw=$(head -n 1 commands.txt | xargs)
+            cmd=$(normalize_cmd "$raw")
 
-            if [ -z "$raw_cmd" ]; then
+            echo "" | tee -a "$LOG"
+            echo "🔹 EXEC => $raw" | tee -a "$LOG"
+            echo "────────────────────────" | tee -a "$LOG"
+
+            if [[ "$cmd" == __CD__* ]]; then
+              newdir="${cmd#__CD__ }"
+              if cd "$newdir" 2>/dev/null; then
+                pwd > "$STATE_CWD"
+                echo "Changed directory to $(pwd)" | tee -a "$LOG"
+                save_state 0
+              else
+                echo "cd: no such directory" | tee -a "$LOG"
+                save_state 1
+              fi
               dequeue
-              push_repo
+              git_sync
               continue
             fi
 
-            cmd="$(normalize_cmd "$raw_cmd")"
+            if [[ "$cmd" == __EXPORT__* ]]; then
+              eval "export ${cmd#__EXPORT__ }"
+              echo "$cmd" >> "$STATE_ENV"
+              echo "env updated" | tee -a "$LOG"
+              save_state 0
+              dequeue
+              git_sync
+              continue
+            fi
 
-            echo ""
-            echo "🟢 EXEC: $raw_cmd"
-            echo "────────────────────"
-
-            # هر دستور حداکثر 120 ثانیه
-            timeout 120s script -q -c "bash -ic '$cmd'" /dev/null \
-              | stdbuf -oL -eL tee -a sessions.log
+            timeout 200s script -q -c "bash -ic '$cmd'" /dev/null \
+              | stdbuf -oL -eL tee -a "$LOG"
 
             exit_code=${PIPESTATUS[0]}
+            save_state "$exit_code"
 
-            echo "────────────────────"
-            echo "EXIT ➜ $exit_code"
+            echo "────────────────────────" | tee -a "$LOG"
+            echo "EXIT CODE: $exit_code" | tee -a "$LOG"
 
-            # بعد از اجرا، دستور حذف شود حتی اگر fail شود
             dequeue
+            git_sync
 
-            # ذخیره
-            push_repo
           done
