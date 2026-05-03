@@ -1,168 +1,33 @@
-name: UltraOps GigaPro Max Interactive Terminal
+name: UltraOps v15
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
 
-permissions:
-  contents: write
+concurrency:
+  group: ultraops
+  cancel-in-progress: false
 
 jobs:
-  remote_terminal:
-runs-on: ubuntu-latest
-timeout-minutes: 480
 
-steps:
-- name: Checkout
-uses: actions/checkout@v4
-with:
-fetch-depth: 0
+  runner:
 
-- name: Setup git and install dependencies
-shell: bash
-run: |
-git config --global user.name "github-actions"
-git config --global user.email "github-actions@github.com"
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
 
-sudo apt-get update
-sudo apt-get install -y tmux
+    steps:
 
-- name: Prepare folders and files
-shell: bash
-run: |
-mkdir -p session session/logs
+      - name: checkout
+        uses: actions/checkout@v4
 
-touch session/session.log
-touch session/cwd
-touch session/env
-touch session/queue.lock
+      - name: install packages
+        run: |
+          sudo apt update
+          sudo apt install -y tmux git sed coreutils util-linux
 
-[ -f commands.txt ] || echo "" > commands.txt
-[ -s session/cwd ] || pwd > session/cwd
-[ -s session/env ] || echo "#env" > session/env
-[ -f status.md ] || echo "# UltraOps Status" > status.md
-
-- name: Launch MaxTerminal daemon
-shell: bash
-run: |
-
-tmux has-session -t ultra 2>/dev/null || tmux new-session -d -s ultra
-
-cat > run.sh <<'SCRIPT'
-#!/usr/bin/env bash
-
-set +e
-set -o pipefail
-
-echo "UltraOps Terminal started"
-
-dequeue() {
-  tail -n +2 commands.txt > .tmp && mv .tmp commands.txt
-}
-
-lock_queue() {
-  touch session/queue.lock
-}
-
-unlock_queue() {
-  rm -f session/queue.lock
-}
-
-commit_push() {
-  git add commands.txt session session/logs status.md 2>/dev/null || true
-  git commit -m "queue update [skip ci]" >/dev/null 2>&1 || true
-  git pull --rebase --quiet || true
-  git push --quiet || true
-}
-
-get_datetime() {
-  date "+%Y-%m-%d %H:%M:%S"
-}
-
-while true
-do
-
-  git fetch -q || true
-  git pull --rebase --quiet || true
-
-  if [ -f session/queue.lock ]; then
-sleep 2
-continue
-  fi
-
-  cmd=$(head -n 1 commands.txt | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
-
-  if [ -z "$cmd" ]; then
-sleep 1
-continue
-  fi
-
-  if [ "$cmd" = "!CLEAR" ]; then
-echo "[$(get_datetime)] CLEAR QUEUE" >> session/session.log
-echo "" > commands.txt
-dequeue
-commit_push
-continue
-  fi
-
-  if [ "$cmd" = "!KILL" ]; then
-echo "[$(get_datetime)] TERMINATE" >> session/session.log
-unlock_queue
-dequeue
-commit_push
-exit 0
-  fi
-
-  lock_queue
-
-  echo "[$(get_datetime)] RUN: $cmd" >> session/session.log
-
-  tmux send-keys -t ultra "$cmd" C-m
-
-  sleep 2
-
-  tmux capture-pane -t ultra -p -S -300 >> session/session.log
-
-  lastlog=$(tail -n 30 session/session.log)
-
-  {
-echo ""
-echo "## $(get_datetime)"
-echo "$cmd"
-echo "-----"
-echo "$lastlog"
-  } > status.md
-
-  if [[ "$cmd" =~ ^cd[[:space:]]+(.+) ]]; then
-new_dir="${BASH_REMATCH[1]}"
-if [ -d "$new_dir" ]; then
-cd "$new_dir"
-pwd > session/cwd
-fi
-  fi
-
-  if [[ "$cmd" =~ ^export[[:space:]]+ ]]; then
-echo "$cmd" >> session/env
-  fi
-
-  unlock_queue
-  dequeue
-  commit_push
-
-  sleep 1
-
-done
-SCRIPT
-
-chmod +x run.sh
-./run.sh &
-
-- name: Show last output
-shell: bash
-run: |
-echo "==== LAST TERMINAL OUTPUT ===="
-tail -n 30 session/session.log || true
-
-- name: Show status
-shell: bash
-run: |
-cat status.md || true
+      - name: run ultraops
+        run: |
+          chmod +x run.sh
+          ./run.sh
