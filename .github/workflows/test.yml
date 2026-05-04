@@ -1,48 +1,41 @@
-name: Proxy Test Server
+name: Build Waydroid Release
 
 on:
   workflow_dispatch:
 
 jobs:
-  proxy:
+  build:
     runs-on: ubuntu-latest
-    timeout-minutes: 360
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Update system
-      run: |
-        sudo apt update
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y git wget curl tar
 
-    - name: Install TinyProxy
-      run: |
-        sudo apt install -y tinyproxy
+      - name: Clone Waydroid repositories
+        run: |
+          git clone https://github.com/waydroid/waydroid.git
+          git clone https://github.com/waydroid/android_vendor_waydroid.git
 
-    - name: Configure TinyProxy
-      run: |
-        sudo sed -i 's/Allow 127.0.0.1/#Allow 127.0.0.1/g' /etc/tinyproxy/tinyproxy.conf
-        echo "Allow 0.0.0.0/0" | sudo tee -a /etc/tinyproxy/tinyproxy.conf
-        sudo sed -i 's/Port 8888/Port 8888/g' /etc/tinyproxy/tinyproxy.conf
+      - name: Create archive
+        run: |
+          tar -czf waydroid-offline.tar.gz waydroid android_vendor_waydroid
 
-    - name: Restart TinyProxy
-      run: |
-        sudo service tinyproxy restart
-        sudo service tinyproxy status
+      - name: Create Tag
+        run: |
+          TAG=waydroid-$(date +'%Y%m%d')
+          echo "TAG_NAME=$TAG" >> $GITHUB_ENV
+          git tag $TAG
+          git push origin $TAG
 
-    - name: Show public IP
-      run: |
-        echo "Public IP:"
-        curl ifconfig.me || true
-        echo ""
-        echo "Proxy port: 8888"
-
-    - name: Test proxy locally
-      run: |
-        curl -x http://127.0.0.1:8888 http://example.com
-
-    - name: Keep server alive
-      run: |
-        echo "Server running..."
-        for i in {1..21600}; do
-          sleep 1
-        done
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.TAG_NAME }}
+          files: waydroid-offline.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
