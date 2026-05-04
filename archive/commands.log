@@ -12,3 +12,4 @@ ping -c 10 aparat.com
 test
 ping -c 4 google.com
 clear
+cd /etc/
