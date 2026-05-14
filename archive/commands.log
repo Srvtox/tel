@@ -13,3 +13,4 @@ test
 ping -c 4 google.com
 clear
 cd /etc/
+test
