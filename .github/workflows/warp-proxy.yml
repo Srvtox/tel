@@ -102,9 +102,8 @@ jobs:
 
       - name: Create redirect page
         run: |
-          mkdir page
 
-          cat > page/index.html <<EOF
+          cat > index.html <<EOF
           <!DOCTYPE html>
           <html>
           <head>
