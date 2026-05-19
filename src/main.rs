@@ -23,7 +23,7 @@ async fn main() {
         .unwrap();
 
     let app = Router::new()
-        .route("/router", get(router))
+        .route("/router", get(router).post(router))
         .with_state(client);
 
     let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
