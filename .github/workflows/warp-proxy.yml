@@ -118,17 +118,16 @@ jobs:
           </html>
           EOF
 
-      - name: Deploy GitHub Pages
+      - name: Commit and Push to Main
         run: |
-          cd page
-          git init
-          git checkout -b gh-pages
-          git config user.name "github-actions"
-          git config user.email "actions@github.com"
-          git add .
-          git commit -m "update tunnel"
-          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} gh-pages --force
-
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          # حتماً [skip ci] رو بگذار تا ورک‌فلو وارد حلقه بی‌نهایت نشه
+          git commit -m "Update Tunnel URL [skip ci]" || echo "No changes to commit"
+          git push origin main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Watchdog
         run: |
           for i in $(seq 1 360)
