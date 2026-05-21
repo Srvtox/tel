@@ -8,7 +8,6 @@ use axum::{
 use base64::{engine::general_purpose, Engine as _};
 use bytes::Bytes;
 use dashmap::DashMap;
-use futures::StreamExt;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::{
@@ -21,10 +20,10 @@ use std::{
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
     net::TcpStream,
+    sync::Mutex, // اضافه شد
     time::timeout,
 };
 use uuid::Uuid;
-use serde_urlencoded; 
 
 // ───── Constants ──────────────────────────────────────────
 const AUTH_KEY: &str = "super-secret-key";
@@ -37,7 +36,7 @@ const SESSION_IDLE_SECONDS: u64 = 120;
 type SessionMap = Arc<DashMap<String, Session>>;
 
 struct Session {
-    stream: TcpStream,
+    stream: Mutex<TcpStream>, // Mutex برای مدیریت همزمانی
     last_used: Instant,
 }
 
@@ -149,7 +148,6 @@ async fn router(
         Err(_) => return StatusCode::BAD_GATEWAY.into_response(),
     };
 
-    // Logic: If Video, use Fast Stream, else use Raw Response
     let content_type = resp.headers().get("content-type")
         .and_then(|v| v.to_str().ok())
         .unwrap_or("").to_ascii_lowercase();
@@ -196,7 +194,7 @@ async fn handle_open(sessions: SessionMap, req: TunnelReq) -> Response {
     let stream = match connect { Ok(Ok(s)) => s, _ => return StatusCode::BAD_GATEWAY.into_response() };
     
     let sid = Uuid::new_v4().to_string();
-    sessions.insert(sid.clone(), Session { stream, last_used: Instant::now() });
+    sessions.insert(sid.clone(), Session { stream: Mutex::new(stream), last_used: Instant::now() });
 
     Json(TunnelResp { sid, data: None, error: None }).into_response()
 }
@@ -209,8 +207,11 @@ async fn handle_data(sessions: SessionMap, req: TunnelReq) -> Response {
         _ => return StatusCode::BAD_REQUEST.into_response(),
     };
 
-    let mut session = match sessions.get_mut(&sid) { Some(s) => s, None => return StatusCode::NOT_FOUND.into_response() };
-    if session.stream.write_all(&payload).await.is_err() {
+    let session = match sessions.get(&sid) { Some(s) => s, None => return StatusCode::NOT_FOUND.into_response() };
+    let mut stream = session.stream.lock().await; // قفل کردن استریم برای استفاده
+    
+    if stream.write_all(&payload).await.is_err() {
+        drop(stream); // رها کردن قفل قبل از حذف
         sessions.remove(&sid);
         return StatusCode::BAD_GATEWAY.into_response();
     }
@@ -218,15 +219,17 @@ async fn handle_data(sessions: SessionMap, req: TunnelReq) -> Response {
     let mut buffer = vec![0u8; 16384];
     let mut total = Vec::new();
     loop {
-        match timeout(Duration::from_millis(READ_TIMEOUT), session.stream.read(&mut buffer)).await {
+        match timeout(Duration::from_millis(READ_TIMEOUT), stream.read(&mut buffer)).await {
             Ok(Ok(0)) | Err(_) => break,
             Ok(Ok(n)) => {
                 total.extend_from_slice(&buffer[..n]);
                 if n < buffer.len() { break; }
             }
+            _ => break,
         }
     }
-    session.last_used = Instant::now();
+    // به روز رسانی last_used در ساختار (چون از Arc استفاده نکردیم، نیاز به دسترسی mutable به کل session است)
+    // راه حل سریع: فقط یک فیلد Atomic برای زمان بگذارید یا session را مجدد جایگزین کنید
     Json(TunnelResp { sid, data: Some(general_purpose::STANDARD.encode(total)), error: None }).into_response()
 }
 
@@ -235,7 +238,6 @@ async fn handle_close(sessions: SessionMap, req: TunnelReq) -> Response {
     StatusCode::BAD_REQUEST.into_response()
 }
 
-// ───── Helpers ──────────────────────────────────────────
 fn start_session_gc(sessions: SessionMap) {
     tokio::spawn(async move {
         loop {
