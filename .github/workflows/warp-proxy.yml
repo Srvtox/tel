@@ -84,7 +84,6 @@ jobs:
           sleep 5
 
       - name: Save error log to repo
-        if: failure()
         run: |
           mkdir -p logs
           mv error.log logs/error-$(date +%s).log
