@@ -309,7 +309,7 @@ async fn handle_close(sessions: SessionMap, req: TunnelReq) -> Response {
 fn is_safe_target(target: &str) -> bool {
     if let Some(host) = target.split(':').next() {
         if let Ok(ip) = IpAddr::from_str(host) {
-            match ip {
+            return match ip {
     std::net::IpAddr::V4(v4) => {
         !v4.is_private() && !v4.is_loopback()
     }
