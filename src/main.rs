@@ -24,6 +24,7 @@ use tokio::{
     time::timeout,
 };
 use uuid::Uuid;
+use serde_urlencoded; 
 
 // ───── Constants ──────────────────────────────────────────
 const AUTH_KEY: &str = "super-secret-key";
