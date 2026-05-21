@@ -1,16 +1,70 @@
 use axum::{
-    extract::{Query, State},
+    extract::{State},
     http::{HeaderMap, HeaderName, StatusCode},
     response::{IntoResponse, Response},
-    routing::get,
-    Router,
+    routing::{post},
+    Json, Router,
 };
 use base64::{engine::general_purpose, Engine as _};
 use bytes::Bytes;
+use dashmap::DashMap;
 use futures::StreamExt;
 use reqwest::Client;
-use std::{collections::HashMap, net::SocketAddr, time::Duration};
+use serde::{Deserialize, Serialize};
+use std::{
+    collections::HashMap,
+    net::{IpAddr, SocketAddr},
+    str::FromStr,
+    sync::Arc,
+    time::{Duration, Instant},
+};
+use tokio::{
+    io::{AsyncReadExt, AsyncWriteExt},
+    net::TcpStream,
+    time::timeout,
+};
+use uuid::Uuid;
 
+// ───── Constants ──────────────────────────────────────────
+const AUTH_KEY: &str = "super-secret-key";
+const CONNECT_TIMEOUT: u64 = 10;
+const READ_TIMEOUT: u64 = 300;
+const MAX_PAYLOAD_SIZE: usize = 64 * 1024;
+const SESSION_IDLE_SECONDS: u64 = 120;
+
+// ───── Types ──────────────────────────────────────────────
+type SessionMap = Arc<DashMap<String, Session>>;
+
+struct Session {
+    stream: TcpStream,
+    last_used: Instant,
+}
+
+#[derive(Debug, Deserialize)]
+struct TunnelReq {
+    op: String,
+    target: Option<String>,
+    sid: Option<String>,
+    payload: Option<String>,
+}
+
+#[derive(Debug, Serialize)]
+struct TunnelResp {
+    sid: String,
+    data: Option<String>,
+    error: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+struct GasRequest {
+    key: String,
+    u: String,
+    m: Option<String>,
+    h: Option<HashMap<String, String>>,
+    b: Option<String>,
+}
+
+// ───── Main ──────────────────────────────────────────────
 #[tokio::main]
 async fn main() {
     let client = Client::builder()
@@ -22,116 +76,198 @@ async fn main() {
         .build()
         .unwrap();
 
+    let sessions: SessionMap = Arc::new(DashMap::new());
+    start_session_gc(sessions.clone());
+
     let app = Router::new()
-        .route("/router", get(router).post(router))
-        .with_state(client);
+        .route("/router", post(router))
+        .route("/tunnel", post(tunnel_handler))
+        .with_state((client, sessions));
 
     let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
-
-    println!("🚀 Proxy running on {}", addr);
+    println!("🚀 Production Proxy running on {}", addr);
 
     let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
     axum::serve(listener, app).await.unwrap();
 }
 
+// ───── Router Handler ────────────────────────────────────
 async fn router(
-    Query(params): Query<HashMap<String, String>>,
-    State(client): State<Client>,
+    State((client, _)): State<(Client, SessionMap)>,
     headers: HeaderMap,
+    body: Bytes,
 ) -> impl IntoResponse {
-    let target = match params.get("u") {
-        Some(u) => u,
-        None => return StatusCode::BAD_REQUEST.into_response(),
+    let gas_req: GasRequest = if !body.is_empty() {
+        match serde_json::from_slice(&body) {
+            Ok(v) => v,
+            Err(_) => return StatusCode::BAD_REQUEST.into_response(),
+        }
+    } else {
+        let query: HashMap<String, String> = serde_urlencoded::from_str(
+            headers.get("x-original-query")
+                .and_then(|v| v.to_str().ok())
+                .unwrap_or("")
+        ).unwrap_or_default();
+
+        GasRequest {
+            key: query.get("key").cloned().unwrap_or_default(),
+            u: query.get("u").cloned().unwrap_or_default(),
+            m: Some("GET".into()),
+            h: None,
+            b: None,
+        }
     };
 
-    let mut req = client.get(target);
+    if gas_req.key != AUTH_KEY {
+        return StatusCode::UNAUTHORIZED.into_response();
+    }
 
-    for (k, v) in headers.iter() {
-        if should_skip_header(k) {
-            continue;
-        }
+    let method = gas_req.m.unwrap_or("GET".into());
+    let mut req_builder = match method.as_str() {
+        "POST" => client.post(&gas_req.u),
+        "PUT" => client.put(&gas_req.u),
+        "DELETE" => client.delete(&gas_req.u),
+        _ => client.get(&gas_req.u),
+    };
 
-        if let Ok(val) = v.to_str() {
-            req = req.header(k, val);
+    if let Some(custom_headers) = gas_req.h {
+        for (k, v) in custom_headers {
+            if should_skip_header(&HeaderName::from_bytes(k.as_bytes()).unwrap_or(HeaderName::from_static("x"))) {
+                continue;
+            }
+            req_builder = req_builder.header(k, v);
         }
     }
 
-    let resp = match req.send().await {
+    if let Some(b) = gas_req.b {
+        req_builder = req_builder.body(b);
+    }
+
+    let resp = match req_builder.send().await {
         Ok(r) => r,
-        Err(err) => {
-            eprintln!("❌ Upstream error: {}", err);
-            return StatusCode::BAD_GATEWAY.into_response();
-        }
+        Err(_) => return StatusCode::BAD_GATEWAY.into_response(),
     };
 
-    let content_type = resp
-        .headers()
-        .get("content-type")
+    // Logic: If Video, use Fast Stream, else use Raw Response
+    let content_type = resp.headers().get("content-type")
         .and_then(|v| v.to_str().ok())
-        .unwrap_or("")
-        .to_ascii_lowercase();
+        .unwrap_or("").to_ascii_lowercase();
 
     if is_video(&content_type) {
         fast_stream(resp).await
     } else {
-        slow_sse(resp).await
+        let status = resp.status();
+        let resp_headers = resp.headers().clone();
+        let raw = resp.bytes().await.unwrap_or_default();
+
+        Json(serde_json::json!({
+            "status": status.as_u16(),
+            "headers": resp_headers.iter().map(|(k, v)| (k.to_string(), v.to_str().unwrap_or("").to_string())).collect::<HashMap<_, _>>(),
+            "body": general_purpose::STANDARD.encode(raw),
+            "type": "raw"
+        })).into_response()
     }
 }
 
+// ───── Tunnel Handler ────────────────────────────────────
+async fn tunnel_handler(
+    State((_, sessions)): State<(Client, SessionMap)>,
+    headers: HeaderMap,
+    Json(req): Json<TunnelReq>,
+) -> impl IntoResponse {
+    if headers.get("x-auth-key").map(|v| v == AUTH_KEY).unwrap_or(false) == false {
+        return StatusCode::UNAUTHORIZED.into_response();
+    }
+
+    match req.op.as_str() {
+        "open" => handle_open(sessions, req).await,
+        "data" => handle_data(sessions, req).await,
+        "close" => handle_close(sessions, req).await,
+        _ => StatusCode::BAD_REQUEST.into_response(),
+    }
+}
+
+async fn handle_open(sessions: SessionMap, req: TunnelReq) -> Response {
+    let target = match req.target { Some(t) => t, None => return StatusCode::BAD_REQUEST.into_response() };
+    if !is_safe_target(&target) { return StatusCode::FORBIDDEN.into_response(); }
+
+    let connect = timeout(Duration::from_secs(CONNECT_TIMEOUT), TcpStream::connect(&target)).await;
+    let stream = match connect { Ok(Ok(s)) => s, _ => return StatusCode::BAD_GATEWAY.into_response() };
+    
+    let sid = Uuid::new_v4().to_string();
+    sessions.insert(sid.clone(), Session { stream, last_used: Instant::now() });
+
+    Json(TunnelResp { sid, data: None, error: None }).into_response()
+}
+
+async fn handle_data(sessions: SessionMap, req: TunnelReq) -> Response {
+    let sid = match req.sid { Some(s) => s, None => return StatusCode::BAD_REQUEST.into_response() };
+    let payload_b64 = match req.payload { Some(p) => p, None => return StatusCode::BAD_REQUEST.into_response() };
+    let payload = match general_purpose::STANDARD.decode(payload_b64) {
+        Ok(p) if p.len() <= MAX_PAYLOAD_SIZE => p,
+        _ => return StatusCode::BAD_REQUEST.into_response(),
+    };
+
+    let mut session = match sessions.get_mut(&sid) { Some(s) => s, None => return StatusCode::NOT_FOUND.into_response() };
+    if session.stream.write_all(&payload).await.is_err() {
+        sessions.remove(&sid);
+        return StatusCode::BAD_GATEWAY.into_response();
+    }
+
+    let mut buffer = vec![0u8; 16384];
+    let mut total = Vec::new();
+    loop {
+        match timeout(Duration::from_millis(READ_TIMEOUT), session.stream.read(&mut buffer)).await {
+            Ok(Ok(0)) | Err(_) => break,
+            Ok(Ok(n)) => {
+                total.extend_from_slice(&buffer[..n]);
+                if n < buffer.len() { break; }
+            }
+        }
+    }
+    session.last_used = Instant::now();
+    Json(TunnelResp { sid, data: Some(general_purpose::STANDARD.encode(total)), error: None }).into_response()
+}
+
+async fn handle_close(sessions: SessionMap, req: TunnelReq) -> Response {
+    if let Some(sid) = req.sid { sessions.remove(&sid); return StatusCode::OK.into_response(); }
+    StatusCode::BAD_REQUEST.into_response()
+}
+
+// ───── Helpers ──────────────────────────────────────────
+fn start_session_gc(sessions: SessionMap) {
+    tokio::spawn(async move {
+        loop {
+            tokio::time::sleep(Duration::from_secs(30)).await;
+            let now = Instant::now();
+            sessions.retain(|_, s| now.duration_since(s.last_used).as_secs() < SESSION_IDLE_SECONDS);
+        }
+    });
+}
+
+fn is_safe_target(target: &str) -> bool {
+    if let Some(host) = target.split(':').next() {
+        if let Ok(ip) = IpAddr::from_str(host) { return !ip.is_loopback() && !ip.is_private(); }
+    }
+    true
+}
+
 fn should_skip_header(name: &HeaderName) -> bool {
-    matches!(
-        name.as_str().to_ascii_lowercase().as_str(),
-        "host" | "content-length" | "transfer-encoding" | "connection" | "accept-encoding"
-    )
+    matches!(name.as_str().to_ascii_lowercase().as_str(), "host" | "content-length" | "transfer-encoding" | "connection" | "accept-encoding" | "proxy-connection" | "upgrade" | "keep-alive")
 }
 
 fn is_video(ct: &str) -> bool {
-    ct.contains("video")
-        || ct.contains("mp4")
-        || ct.contains("webm")
-        || ct.contains("mpeg")
-        || ct.contains("ogg")
+    ct.contains("video") || ct.contains("mp4") || ct.contains("webm") || ct.contains("mpeg")
 }
 
 async fn fast_stream(resp: reqwest::Response) -> Response {
     let status = resp.status();
     let headers = resp.headers().clone();
-    let stream = resp.bytes_stream();
-
-    let body = axum::body::Body::from_stream(stream);
+    let body = axum::body::Body::from_stream(resp.bytes_stream());
 
     let mut builder = Response::builder().status(status);
-
     for (k, v) in headers.iter() {
-        if should_skip_header(k) {
-            continue;
-        }
-        builder = builder.header(k, v);
+        if !should_skip_header(k) { builder = builder.header(k, v); }
     }
-
     builder.body(body).unwrap()
-}
-
-async fn slow_sse(resp: reqwest::Response) -> Response {
-    let status = resp.status();
-    let stream = resp.bytes_stream();
-
-    let mapped = stream.map(|chunk| {
-        let text = match chunk {
-            Ok(bytes) => {
-                let encoded = general_purpose::STANDARD.encode(bytes);
-                format!("data:{}\n\n", encoded)
-            }
-            Err(_) => "event:error\ndata:stream\n\n".to_string(),
-        };
-
-        Ok::<Bytes, std::io::Error>(Bytes::from(text))
-    });
-
-    Response::builder()
-        .status(status)
-        .header("content-type", "text/event-stream")
-        .header("cache-control", "no-cache")
-        .body(axum::body::Body::from_stream(mapped))
-        .unwrap()
 }
