@@ -4,30 +4,14 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-
-# Web framework
-axum = { version = "0.7", features = ["macros"] }
-
-# Async runtime
+axum = "0.7"
 tokio = { version = "1.37", features = ["full"] }
-
-# HTTP client (with streaming + socks proxy support)
 reqwest = { version = "0.12", features = ["json", "stream", "socks"] }
-
-# Serialization
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
 serde_urlencoded = "0.7"
-
-# Async utilities
 futures = "0.3"
-bytes = "1"
-
-# Concurrency map
-dashmap = "5"
-
-# UUID
-uuid = { version = "1", features = ["v4"] }
-
-# Base64 encoding
+bytes = "1.0"
+dashmap = "5.5"
+uuid = { version = "1.8", features = ["v4"] }
 base64 = "0.22"
