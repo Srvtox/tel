@@ -281,9 +281,9 @@ async fn handle_data(sessions: SessionMap, req: TunnelReq) -> Response {
         }
     }
 
-    if let Ok(mut last) = session.last_used.lock().await {
-        *last = Instant::now();
-    }
+    let mut last = session.last_used.lock().await;
+    *last = Instant::now();
+
 
     Json(TunnelResp {
         sid,
@@ -309,7 +309,15 @@ async fn handle_close(sessions: SessionMap, req: TunnelReq) -> Response {
 fn is_safe_target(target: &str) -> bool {
     if let Some(host) = target.split(':').next() {
         if let Ok(ip) = IpAddr::from_str(host) {
-            return !ip.is_loopback() && !ip.is_private();
+            match ip {
+    std::net::IpAddr::V4(v4) => {
+        !v4.is_private() && !v4.is_loopback()
+    }
+    std::net::IpAddr::V6(v6) => {
+        !v6.is_loopback()
+    }
+}
+
         }
     }
     true
@@ -371,4 +379,3 @@ async fn slow_sse(resp: reqwest::Response) -> Response {
         .body(axum::body::Body::from_stream(stream))
         .unwrap()
 }
-
