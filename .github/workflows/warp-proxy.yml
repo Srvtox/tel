@@ -75,7 +75,8 @@ jobs:
           curl --socks5 127.0.0.1:1080 https://ipinfo.io
 
       - name: Build Rust proxy
-        run: cargo build --release
+        run: |
+          cargo build --release 2>> error.log || echo "Rust build failed" >> error.log
 
       - name: Start proxy
         run: |
@@ -148,3 +149,17 @@ jobs:
           -H "Accept: application/vnd.github+json" \
           https://api.github.com/repos/${{ github.repository }}/actions/workflows/warp.yml/dispatches \
           -d '{"ref":"main"}'
+      - name: Save error log to repo
+        if: failure()
+        run: |
+          mkdir -p logs
+          mv error.log logs/error-$(date +%s).log
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add logs/*
+          git commit -m "Add workflow error log [skip ci]" || echo "nothing to commit"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
