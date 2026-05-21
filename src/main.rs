@@ -23,6 +23,7 @@ use tokio::{
     sync::Mutex, // اضافه شد
     time::timeout,
 };
+use http_body_util::{BodyExt, StreamBody};
 use uuid::Uuid;
 
 // ───── Constants ──────────────────────────────────────────
@@ -266,7 +267,12 @@ fn is_video(ct: &str) -> bool {
 async fn fast_stream(resp: reqwest::Response) -> Response {
     let status = resp.status();
     let headers = resp.headers().clone();
-    let body = axum::body::Body::from_stream(resp.bytes_stream());
+    
+    // تبدیل stream ریکوئست به body قابل فهم برای Axum 0.7
+    let stream = resp.bytes_stream().map(|result| {
+        result.map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))
+    });
+    let body = BodyExt::boxed(axum::body::Body::from_stream(stream));
 
     let mut builder = Response::builder().status(status);
     for (k, v) in headers.iter() {
