@@ -96,7 +96,7 @@ jobs:
 
       - name: Extract tunnel URL
         run: |
-          URL=$(grep -o 'https://[-a-z0-9]*\.trycloudflare.com' tunnel.txt | head -n1)/router
+          URL=$(grep -o 'https://[-a-z0-9]*\.trycloudflare.com' tunnel.txt | head -n1)
           echo $URL > tunnel_url.txt
           echo "TUNNEL_URL=$URL" >> $GITHUB_ENV
 
