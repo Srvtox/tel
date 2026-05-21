@@ -353,9 +353,11 @@ async fn fast_stream(resp: reqwest::Response) -> Response {
 }
 
 async fn slow_sse(resp: reqwest::Response) -> Response {
+    let status = resp.status();
+
     let stream = resp.bytes_stream().map(|chunk| {
         let text = match chunk {
-            Ok(bytes) => format!("data:{}\n\n", general_purpose::STANDARD.encode(bytes)),
+            Ok(bytes) => format!("data:{}\n\n", base64::engine::general_purpose::STANDARD.encode(bytes)),
             Err(_) => "event:error\ndata:stream\n\n".to_string(),
         };
 
@@ -363,9 +365,10 @@ async fn slow_sse(resp: reqwest::Response) -> Response {
     });
 
     Response::builder()
-        .status(resp.status())
+        .status(status)
         .header("content-type", "text/event-stream")
         .header("cache-control", "no-cache")
         .body(axum::body::Body::from_stream(stream))
         .unwrap()
 }
+
